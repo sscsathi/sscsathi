@@ -17,6 +17,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { MockTest, QuestionLanguage } from '../types/exam';
+import { PaletteSymbol } from './PaletteSymbol';
 
 type InstructionViewLang = 'both' | 'en' | 'hi';
 
@@ -700,44 +701,30 @@ export function TestInstructionsScreen({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {/* 1. Not Visited / Not Answered */}
+                    {/* 1. Not Attempted — Blue Square (#1D4ED8) */}
                     <tr className="hover:bg-slate-50/60">
                       <td className="px-4 py-4">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <span
-                            aria-hidden="true"
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-full border-2 border-slate-300 bg-slate-100 font-mono text-xs font-bold text-slate-700"
-                          >
-                            1
-                          </span>
-                          <span
-                            aria-hidden="true"
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-rose-700 bg-rose-600 font-mono text-xs font-bold text-white"
-                          >
-                            2
-                          </span>
+                        <div className="mx-auto w-9">
+                          <PaletteSymbol state="not-attempted" label={1} size="md" />
                         </div>
                       </td>
                       <td className="px-4 py-4">
                         <BilingualText
                           viewLang={viewLang}
-                          en="Not Visited (Grey) / Not Answered (Red): You have either not visited the question yet or visited it without answering."
-                          hi="अभी तक नहीं देखा (ग्रे) / उत्तर नहीं दिया (लाल): आपने अभी तक यह प्रश्न नहीं देखा है या इसे बिना उत्तर दिए छोड़ दिया है।"
+                          en="Not Attempted: You have not answered this question yet (unvisited or skipped without selecting an option)."
+                          hi="अभी तक उत्तर नहीं दिया गया: आपने अभी तक इस प्रश्न का उत्तर नहीं दिया है (अभी नहीं देखा गया या बिना विकल्प चुने छोड़ दिया गया)।"
                           enClassName="text-sm font-semibold text-[#0F172A] leading-snug"
                           hiClassName="text-xs sm:text-sm font-medium text-slate-600 leading-snug"
                         />
                       </td>
                     </tr>
 
-                    {/* 2. Answered */}
+                    {/* 2. Answered — Green Square (#16A34A) */}
                     <tr className="hover:bg-slate-50/60">
-                      <td className="px-4 py-4 text-center">
-                        <span
-                          aria-hidden="true"
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-emerald-700 bg-emerald-600 font-mono text-xs font-bold text-white shadow-xs"
-                        >
-                          5
-                        </span>
+                      <td className="px-4 py-4">
+                        <div className="mx-auto w-9">
+                          <PaletteSymbol state="answered" label={5} size="md" />
+                        </div>
                       </td>
                       <td className="px-4 py-4">
                         <BilingualText
@@ -750,45 +737,36 @@ export function TestInstructionsScreen({
                       </td>
                     </tr>
 
-                    {/* 3. Marked for Review - Not Answered */}
+                    {/* 3. Not Attempted & Marked for Review — Red Square (#DC2626) + ▲ */}
                     <tr className="hover:bg-slate-50/60">
-                      <td className="px-4 py-4 text-center">
-                        <span
-                          aria-hidden="true"
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-purple-700 bg-purple-600 font-mono text-xs font-bold text-white shadow-xs"
-                        >
-                          9
-                        </span>
+                      <td className="px-4 py-4">
+                        <div className="mx-auto w-9">
+                          <PaletteSymbol state="marked" label={9} size="md" />
+                        </div>
                       </td>
                       <td className="px-4 py-4">
                         <BilingualText
                           viewLang={viewLang}
-                          en="Marked for Review – Not Answered: You have NOT answered this question, but marked it to revisit later."
-                          hi="समीक्षा के लिए चिह्नित - उत्तर नहीं दिया: आपने इस प्रश्न का उत्तर नहीं दिया है, लेकिन बाद में देखने के लिए इसे चिह्नित किया है।"
+                          en="Not Attempted & Marked for Review: You have NOT answered this question, but marked it to revisit later."
+                          hi="उत्तर नहीं दिया गया, पर समीक्षा के लिए चिह्नित: आपने इस प्रश्न का उत्तर नहीं दिया है, लेकिन बाद में देखने के लिए इसे चिह्नित किया है।"
                           enClassName="text-sm font-semibold text-[#0F172A] leading-snug"
                           hiClassName="text-xs sm:text-sm font-medium text-slate-600 leading-snug"
                         />
                       </td>
                     </tr>
 
-                    {/* 4. Answered & Marked for Review */}
+                    {/* 4. Answered & Marked for Review — Yellow Square (#EAB308) + ▲ */}
                     <tr className="hover:bg-slate-50/60">
-                      <td className="px-4 py-4 text-center">
-                        <span
-                          aria-hidden="true"
-                          className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg border border-emerald-700 bg-emerald-600 font-mono text-xs font-bold text-white shadow-xs"
-                        >
-                          14
-                          <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-white bg-purple-600">
-                            <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} />
-                          </span>
-                        </span>
+                      <td className="px-4 py-4">
+                        <div className="mx-auto w-9">
+                          <PaletteSymbol state="answered-marked" label={14} size="md" />
+                        </div>
                       </td>
                       <td className="px-4 py-4">
                         <BilingualText
                           viewLang={viewLang}
-                          en="Answered & Marked for Review – Will be evaluated: You have answered this question and marked it for review. This answer WILL be considered for final evaluation."
-                          hi="उत्तर दिया गया और समीक्षा के लिए चिह्नित - मूल्यांकन किया जाएगा: आपने इस प्रश्न का उत्तर दिया है और समीक्षा के लिए चिह्नित किया है। अंतिम मूल्यांकन में इस उत्तर को गिना जाएगा।"
+                          en="Answered & Marked for Review (will be evaluated): You have answered this question and marked it for review. This answer WILL be considered for final evaluation."
+                          hi="उत्तर दिया गया और समीक्षा के लिए चिह्नित (मूल्यांकन किया जाएगा): आपने इस प्रश्न का उत्तर दिया है और समीक्षा के लिए चिह्नित किया है। अंतिम मूल्यांकन में इस उत्तर को गिना जाएगा।"
                           enClassName="text-sm font-semibold text-[#0F172A] leading-snug"
                           hiClassName="text-xs sm:text-sm font-medium text-slate-600 leading-snug"
                         />

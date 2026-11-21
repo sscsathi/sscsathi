@@ -1,0 +1,6 @@
+{
+  "name": "SSC PrepCBT",
+  "description": "Mobile-friendly SSC mock test and CBT exam simulator with bilingual English/Hindi support, question palette, negative marking scoring, detailed solutions, and custom question builder.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

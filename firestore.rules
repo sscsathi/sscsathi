@@ -1,0 +1,186 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedOwner(userId) {
+      return isSignedIn() && request.auth.token.email_verified == true && request.auth.uid == userId;
+    }
+
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll([
+          'uid',
+          'customName',
+          'isFollowingCommunity',
+          'dailyTargetDate',
+          'miniQuizDone',
+          'sectionalMockDone',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'uid',
+          'customName',
+          'photoURL',
+          'isFollowingCommunity',
+          'dailyTargetDate',
+          'miniQuizDone',
+          'sectionalMockDone',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.uid is string
+        && data.uid == userId
+        && data.uid == request.auth.uid
+        && isValidId(data.uid)
+        && data.customName is string
+        && data.customName.size() >= 1
+        && data.customName.size() <= 40
+        && (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 512))
+        && data.isFollowingCommunity is bool
+        && data.dailyTargetDate is string
+        && data.dailyTargetDate.size() == 10
+        && data.dailyTargetDate.matches('^\\d{4}-\\d{2}-\\d{2}$')
+        && data.miniQuizDone is bool
+        && data.sectionalMockDone is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidExamAttempt(data, userId, attemptId) {
+      return data.keys().hasAll([
+          'attemptId',
+          'userId',
+          'testId',
+          'testTitle',
+          'submittedAt',
+          'totalQuestions',
+          'correctCount',
+          'incorrectCount',
+          'unattemptedCount',
+          'score',
+          'maxScore',
+          'accuracyPercent',
+          'timeTakenSeconds',
+          'totalDurationSeconds',
+          'responses',
+          'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'attemptId',
+          'userId',
+          'testId',
+          'testTitle',
+          'submittedAt',
+          'totalQuestions',
+          'correctCount',
+          'incorrectCount',
+          'unattemptedCount',
+          'score',
+          'maxScore',
+          'accuracyPercent',
+          'timeTakenSeconds',
+          'totalDurationSeconds',
+          'responses',
+          'createdAt'
+        ])
+        && data.attemptId is string
+        && data.attemptId == attemptId
+        && isValidId(data.attemptId)
+        && data.userId is string
+        && data.userId == userId
+        && data.userId == request.auth.uid
+        && isValidId(data.userId)
+        && data.testId is string
+        && data.testId.size() >= 1
+        && data.testId.size() <= 128
+        && data.testTitle is string
+        && data.testTitle.size() >= 1
+        && data.testTitle.size() <= 160
+        && data.submittedAt is string
+        && data.submittedAt.size() >= 1
+        && data.submittedAt.size() <= 64
+        && data.totalQuestions is int
+        && data.totalQuestions >= 1
+        && data.totalQuestions <= 200
+        && data.correctCount is int
+        && data.correctCount >= 0
+        && data.correctCount <= data.totalQuestions
+        && data.incorrectCount is int
+        && data.incorrectCount >= 0
+        && data.incorrectCount <= data.totalQuestions
+        && data.unattemptedCount is int
+        && data.unattemptedCount >= 0
+        && data.unattemptedCount <= data.totalQuestions
+        && data.score is number
+        && data.maxScore is number
+        && data.maxScore >= 0
+        && data.accuracyPercent is number
+        && data.accuracyPercent >= 0
+        && data.accuracyPercent <= 100
+        && data.timeTakenSeconds is number
+        && data.timeTakenSeconds >= 0
+        && data.totalDurationSeconds is number
+        && data.totalDurationSeconds >= 0
+        && data.responses is map
+        && data.responses.size() <= 200
+        && data.createdAt is timestamp
+        && data.createdAt == request.time;
+    }
+
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isVerifiedOwner(userId);
+      allow list: if false;
+      allow create: if isValidId(userId)
+        && isVerifiedOwner(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId)
+        && isVerifiedOwner(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'customName',
+          'photoURL',
+          'isFollowingCommunity',
+          'dailyTargetDate',
+          'miniQuizDone',
+          'sectionalMockDone',
+          'updatedAt'
+        ]);
+      allow delete: if false;
+
+      match /attempts/{attemptId} {
+        allow get: if isValidId(userId) && isValidId(attemptId) && isVerifiedOwner(userId);
+        allow list: if isVerifiedOwner(userId) && resource.data.userId == request.auth.uid;
+        allow create: if isValidId(userId)
+          && isValidId(attemptId)
+          && isVerifiedOwner(userId)
+          && isValidExamAttempt(incoming(), userId, attemptId);
+        allow update, delete: if false;
+      }
+    }
+  }
+}

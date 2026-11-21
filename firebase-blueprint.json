@@ -1,0 +1,183 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Stores aspirant display preferences and daily target progress per authenticated user.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Authentication user UID."
+        },
+        "customName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40,
+          "description": "Editable aspirant display name."
+        },
+        "photoURL": {
+          "type": "string",
+          "maxLength": 512,
+          "description": "Google profile avatar URL."
+        },
+        "isFollowingCommunity": {
+          "type": "boolean",
+          "description": "Whether the aspirant followed community updates."
+        },
+        "dailyTargetDate": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 10,
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "YYYY-MM-DD date string for daily targets."
+        },
+        "miniQuizDone": {
+          "type": "boolean",
+          "description": "Completion state for Today's Mini Quiz."
+        },
+        "sectionalMockDone": {
+          "type": "boolean",
+          "description": "Completion state for Attempt 1 Sectional Mock."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of profile creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last profile update."
+        }
+      },
+      "required": [
+        "uid",
+        "customName",
+        "isFollowingCommunity",
+        "dailyTargetDate",
+        "miniQuizDone",
+        "sectionalMockDone",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ExamAttempt": {
+      "title": "ExamAttempt",
+      "description": "Stores a completed SSC mock test attempt, score, timing, and question responses.",
+      "type": "object",
+      "properties": {
+        "attemptId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Unique identifier for the test attempt."
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "testId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "Mock test identifier."
+        },
+        "testTitle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "description": "Mock test title."
+        },
+        "submittedAt": {
+          "type": "string",
+          "maxLength": 64,
+          "description": "ISO submission timestamp."
+        },
+        "totalQuestions": {
+          "type": "number",
+          "description": "Total number of questions in the mock test."
+        },
+        "correctCount": {
+          "type": "number",
+          "description": "Number of correct answers."
+        },
+        "incorrectCount": {
+          "type": "number",
+          "description": "Number of incorrect answers."
+        },
+        "unattemptedCount": {
+          "type": "number",
+          "description": "Number of unattempted questions."
+        },
+        "score": {
+          "type": "number",
+          "description": "Net score calculated with +2.0 / -0.50 marking."
+        },
+        "maxScore": {
+          "type": "number",
+          "description": "Maximum possible score."
+        },
+        "accuracyPercent": {
+          "type": "number",
+          "description": "Accuracy percentage (0 to 100)."
+        },
+        "timeTakenSeconds": {
+          "type": "number",
+          "description": "Elapsed time taken in seconds."
+        },
+        "totalDurationSeconds": {
+          "type": "number",
+          "description": "Allocated duration in seconds."
+        },
+        "responses": {
+          "type": "object",
+          "description": "Map of questionId to QuestionResponse state."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of attempt submission."
+        }
+      },
+      "required": [
+        "attemptId",
+        "userId",
+        "testId",
+        "testTitle",
+        "submittedAt",
+        "totalQuestions",
+        "correctCount",
+        "incorrectCount",
+        "unattemptedCount",
+        "score",
+        "maxScore",
+        "accuracyPercent",
+        "timeTakenSeconds",
+        "totalDurationSeconds",
+        "responses",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
+      },
+      "description": "Per-user profile preferences and daily target progress."
+    },
+    "/users/{userId}/attempts/{attemptId}": {
+      "schema": {
+        "$ref": "#/entities/ExamAttempt"
+      },
+      "description": "Per-user completed mock test attempts and analytics."
+    }
+  }
+}

@@ -278,46 +278,55 @@ export function HomeDashboard({
           className="pointer-events-none absolute inset-0 bg-gradient-to-r from-amber-50/45 via-white/90 to-indigo-50/35"
         />
 
-        <div className="relative flex flex-col gap-3.5 px-5 pt-4 pb-3.5 pl-6 sm:px-6 sm:pt-5 sm:pb-4 sm:pl-7 lg:flex-row lg:items-center lg:justify-between">
-          {/* Left: Prominent Circular SSC Sathi Logo + Brand Copy */}
+        <div className="relative flex flex-col gap-3.5 px-4 pt-4 pb-3.5 pl-5 sm:px-6 sm:pt-5 sm:pb-4 sm:pl-7">
+          {/* Top Row: Prominent Circular SSC Sathi Logo + Clean Title & Subtitle */}
           <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
             <div className="relative shrink-0 rounded-full bg-white p-0.5 ring-2 ring-[#F59E0B]/55 shadow-sm">
               <img
                 src="/assets/aistudio/1795032296907_b1ef824a.png"
                 alt="SSC Sathi official logo"
-                className="h-15 w-15 sm:h-17 sm:w-17 rounded-full object-cover"
+                className="h-14 w-14 sm:h-16 sm:w-16 rounded-full object-cover"
               />
             </div>
 
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#1E3A8A] leading-none">
-                  SSC SATHI
-                </h1>
-                <span className="inline-flex items-center rounded-full border border-[#F59E0B]/45 bg-amber-50 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-amber-800 whitespace-nowrap shadow-2xs">
-                  LATEST PATTERN • 100% FREE
-                </span>
-              </div>
-              <p className="mt-1.5 text-xs sm:text-sm font-medium text-slate-600 leading-snug">
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#1E3A8A] leading-tight">
+                SSC SATHI
+              </h1>
+              <p className="mt-0.5 text-xs sm:text-sm font-medium text-slate-600 leading-snug">
                 India&apos;s Cleanest Mock Portal for CGL, CHSL &amp; MTS
               </p>
             </div>
           </div>
 
-          {/* Right: 3 Compact Glossy Trust-Stat Pills */}
-          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-gradient-to-b from-white to-emerald-50/80 px-3 py-1.5 text-[11px] font-bold text-emerald-900 shadow-[0_2px_8px_-2px_rgba(16,185,129,0.18)] whitespace-nowrap">
-              <span aria-hidden="true" className="text-emerald-600 font-black">✓</span>
-              <span>Latest Pattern</span>
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200/90 bg-gradient-to-b from-white to-amber-50/90 px-3 py-1.5 text-[11px] font-bold text-amber-950 shadow-[0_2px_8px_-2px_rgba(245,158,11,0.18)] whitespace-nowrap">
-              <span aria-hidden="true">📊</span>
-              <span>Instant AIR &amp; Percentile</span>
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-200/80 bg-gradient-to-b from-white to-indigo-50/80 px-3 py-1.5 text-[11px] font-bold text-[#1E3A8A] shadow-[0_2px_8px_-2px_rgba(30,58,138,0.15)] whitespace-nowrap">
-              <span aria-hidden="true">🌐</span>
-              <span>Bilingual EN / HI</span>
-            </span>
+          {/* Bottom Row: Full-Width Balanced 3-Column Feature Strip */}
+          <div className="grid grid-cols-3 divide-x divide-[#E2E8F0] rounded-2xl border border-[#E2E8F0] bg-white/90 shadow-[0_2px_10px_-4px_rgba(15,23,42,0.06)]">
+            <div className="flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 py-2 sm:px-3 sm:py-2.5 text-center">
+              <span aria-hidden="true" className="text-[11px] sm:text-xs font-black text-emerald-600 shrink-0">
+                ✓
+              </span>
+              <span className="text-[10px] sm:text-xs font-bold text-emerald-900 leading-tight">
+                Latest Pattern
+              </span>
+            </div>
+
+            <div className="flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 py-2 sm:px-3 sm:py-2.5 text-center">
+              <span aria-hidden="true" className="text-[11px] sm:text-xs shrink-0">
+                📊
+              </span>
+              <span className="text-[10px] sm:text-xs font-bold text-amber-950 leading-tight">
+                Instant AIR &amp; Percentile
+              </span>
+            </div>
+
+            <div className="flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 py-2 sm:px-3 sm:py-2.5 text-center">
+              <span aria-hidden="true" className="text-[11px] sm:text-xs shrink-0">
+                🌐
+              </span>
+              <span className="text-[10px] sm:text-xs font-bold text-[#1E3A8A] leading-tight">
+                Bilingual EN / HI
+              </span>
+            </div>
           </div>
         </div>
       </section>

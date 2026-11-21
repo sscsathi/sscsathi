@@ -205,11 +205,6 @@ export function HomeDashboard({
     testsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const featuredTest = useMemo(
-    () => tests.find((t) => t.seriesType === 'live') ?? tests[0],
-    [tests]
-  );
-
   const sectionHeadingLabel = useMemo(() => {
     if (selectedExam !== 'ALL') {
       return selectedExam === 'RRB NTPC'
@@ -283,14 +278,14 @@ export function HomeDashboard({
           className="pointer-events-none absolute inset-0 bg-gradient-to-r from-amber-50/45 via-white/90 to-indigo-50/35"
         />
 
-        <div className="relative flex flex-col gap-5 px-5 py-5 pl-6 sm:px-7 sm:py-6 sm:pl-8 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative flex flex-col gap-3.5 px-5 pt-4 pb-3.5 pl-6 sm:px-6 sm:pt-5 sm:pb-4 sm:pl-7 lg:flex-row lg:items-center lg:justify-between">
           {/* Left: Prominent Circular SSC Sathi Logo + Brand Copy */}
-          <div className="flex items-center gap-4 min-w-0">
+          <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
             <div className="relative shrink-0 rounded-full bg-white p-0.5 ring-2 ring-[#F59E0B]/55 shadow-sm">
               <img
                 src="/assets/aistudio/1795032296907_b1ef824a.png"
                 alt="SSC Sathi official logo"
-                className="h-16 w-16 sm:h-18 sm:w-18 rounded-full object-cover"
+                className="h-15 w-15 sm:h-17 sm:w-17 rounded-full object-cover"
               />
             </div>
 
@@ -309,8 +304,8 @@ export function HomeDashboard({
             </div>
           </div>
 
-          {/* Center: 3 Compact Glossy Trust-Stat Pills */}
-          <div className="flex flex-wrap items-center gap-2 lg:justify-center">
+          {/* Right: 3 Compact Glossy Trust-Stat Pills */}
+          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-gradient-to-b from-white to-emerald-50/80 px-3 py-1.5 text-[11px] font-bold text-emerald-900 shadow-[0_2px_8px_-2px_rgba(16,185,129,0.18)] whitespace-nowrap">
               <span aria-hidden="true" className="text-emerald-600 font-black">✓</span>
               <span>Latest Pattern</span>
@@ -324,19 +319,6 @@ export function HomeDashboard({
               <span>Bilingual EN / HI</span>
             </span>
           </div>
-
-          {/* Right: Sleek Royal-Blue CTA with Hover Lift */}
-          {featuredTest && (
-            <div className="shrink-0">
-              <button
-                type="button"
-                onClick={() => onStartTest(featuredTest)}
-                className="inline-flex min-h-[46px] w-full lg:w-auto items-center justify-center gap-2 rounded-xl bg-[#1E3A8A] px-5 py-3 text-sm font-bold text-white shadow-[0_8px_20px_-6px_rgba(30,58,138,0.5)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#172E6E] hover:shadow-[0_12px_24px_-6px_rgba(30,58,138,0.6)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1E3A8A] whitespace-nowrap"
-              >
-                <span>Start Practicing →</span>
-              </button>
-            </div>
-          )}
         </div>
       </section>
 

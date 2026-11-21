@@ -198,7 +198,7 @@ export default function App() {
       };
     });
 
-    return [...mergedCustom, ...mergedDefaults];
+    return [...mergedDefaults, ...mergedCustom];
   }, [addedQuestionsMap, customTests]);
 
   // Only show attempts belonging to active tests (excludes any deleted sample/demo tests)
@@ -370,7 +370,7 @@ export default function App() {
 
   const handleSaveNewTest = useCallback((newTest: MockTest) => {
     setCustomTests((prev) => {
-      const next = [newTest, ...prev];
+      const next = [...prev, newTest];
       saveCustomTests(next);
       return next;
     });

@@ -42,6 +42,7 @@ export function ResultScreen({
 }: ResultScreenProps) {
   const [activeTab, setActiveTab] = useState<'scorecard' | 'solutions'>(initialTab);
   const [solutionFilter, setSolutionFilter] = useState<SolutionFilter>('all');
+  const [selectedSectionId, setSelectedSectionId] = useState<string>('all');
   const [solutionLang, setSolutionLang] = useState<QuestionLanguage>('en');
 
   const activeAttemptIndex = useMemo(() => {
@@ -56,6 +57,7 @@ export function ResultScreen({
 
   const positiveMarks = test?.positiveMarks ?? 2;
   const negativeMarks = test?.negativeMarks ?? 0.5;
+  const testSections = test?.sections ?? [];
 
   const topicBreakdown = useMemo(() => {
     if (!test) return [];
@@ -84,9 +86,49 @@ export function ResultScreen({
     return Object.values(map);
   }, [result.responses, test]);
 
+  const sectionBreakdown = useMemo(() => {
+    if (!test || testSections.length === 0) return [];
+    return testSections.map((sec) => {
+      const slice = test.questions.slice(sec.startIndex, sec.endIndex + 1);
+      let correct = 0;
+      let incorrect = 0;
+      let unattempted = 0;
+      for (const q of slice) {
+        const selected = result.responses[q.id]?.selectedIndex ?? null;
+        if (selected === null) unattempted += 1;
+        else if (selected === q.correctIndex) correct += 1;
+        else incorrect += 1;
+      }
+      const attempted = correct + incorrect;
+      const score = Number((correct * positiveMarks - incorrect * negativeMarks).toFixed(2));
+      const maxScore = slice.length * positiveMarks;
+      const accuracy = attempted > 0 ? Math.round((correct / attempted) * 100) : 0;
+      return {
+        ...sec,
+        total: slice.length,
+        attempted,
+        correct,
+        incorrect,
+        unattempted,
+        score,
+        maxScore,
+        accuracy,
+      };
+    });
+  }, [negativeMarks, positiveMarks, result.responses, test, testSections]);
+
   const filteredQuestions = useMemo(() => {
     if (!test) return [];
-    return test.questions.filter((q) => {
+    const activeSec =
+      selectedSectionId === 'all'
+        ? undefined
+        : testSections.find((s) => s.id === selectedSectionId);
+
+    const baseSlice = activeSec
+      ? test.questions.slice(activeSec.startIndex, activeSec.endIndex + 1)
+      : test.questions;
+
+    return baseSlice.filter((q) => {
       const selected = result.responses[q.id]?.selectedIndex ?? null;
       if (solutionFilter === 'correct') return selected === q.correctIndex;
       if (solutionFilter === 'incorrect')
@@ -94,7 +136,7 @@ export function ResultScreen({
       if (solutionFilter === 'unattempted') return selected === null;
       return true;
     });
-  }, [result.responses, solutionFilter, test]);
+  }, [result.responses, selectedSectionId, solutionFilter, test, testSections]);
 
   const positiveEarned = result.correctCount * positiveMarks;
   const negativeDeducted = result.incorrectCount * negativeMarks;
@@ -449,6 +491,54 @@ export function ResultScreen({
               </button>
             </div>
 
+            {/* Section-wise Performance Table (for 4-section Full Mocks) */}
+            {sectionBreakdown.length > 0 && (
+              <div className="mt-6">
+                <h3 className="text-sm font-bold text-[#0F172A]">Section-wise Performance</h3>
+                <div className="mt-3 overflow-x-auto rounded-xl border border-slate-200">
+                  <table className="w-full text-left text-sm">
+                    <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
+                      <tr>
+                        <th className="px-4 py-2.5">Section</th>
+                        <th className="px-4 py-2.5 text-right">Attempted</th>
+                        <th className="px-4 py-2.5 text-right">Correct</th>
+                        <th className="px-4 py-2.5 text-right">Incorrect</th>
+                        <th className="px-4 py-2.5 text-right">Accuracy</th>
+                        <th className="px-4 py-2.5 text-right">Score</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 tabular-nums">
+                      {sectionBreakdown.map((sec) => (
+                        <tr key={sec.id}>
+                          <td className="px-4 py-2.5 font-semibold text-[#0F172A]">
+                            <div>{sec.name}</div>
+                            <div className="text-[11px] font-normal text-slate-500">
+                              Q{sec.startIndex + 1}–Q{sec.endIndex + 1} · {sec.durationMinutes} Mins
+                            </div>
+                          </td>
+                          <td className="px-4 py-2.5 text-right text-slate-600">
+                            {sec.attempted}/{sec.total}
+                          </td>
+                          <td className="px-4 py-2.5 text-right font-semibold text-emerald-700">
+                            {sec.correct}
+                          </td>
+                          <td className="px-4 py-2.5 text-right font-semibold text-rose-700">
+                            {sec.incorrect}
+                          </td>
+                          <td className="px-4 py-2.5 text-right text-slate-700">
+                            {sec.accuracy}%
+                          </td>
+                          <td className="px-4 py-2.5 text-right font-bold text-[#1E3A8A]">
+                            {sec.score}/{sec.maxScore}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
             {/* Topic-wise Breakdown Table */}
             {topicBreakdown.length > 0 && (
               <div className="mt-6">
@@ -510,6 +600,47 @@ export function ResultScreen({
             </div>
           ) : (
             <>
+              {testSections.length > 0 && (
+                <div
+                  role="tablist"
+                  aria-label="Filter solutions by section"
+                  className="flex flex-wrap items-center gap-1.5 rounded-xl border border-slate-200 bg-white p-1.5 shadow-2xs"
+                >
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={selectedSectionId === 'all'}
+                    onClick={() => setSelectedSectionId('all')}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors whitespace-nowrap tabular-nums ${
+                      selectedSectionId === 'all'
+                        ? 'bg-[#1E3A8A] text-white shadow-2xs'
+                        : 'text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    All Sections ({test.questions.length})
+                  </button>
+                  {testSections.map((sec) => {
+                    const active = selectedSectionId === sec.id;
+                    return (
+                      <button
+                        key={sec.id}
+                        type="button"
+                        role="tab"
+                        aria-selected={active}
+                        onClick={() => setSelectedSectionId(sec.id)}
+                        className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors whitespace-nowrap tabular-nums ${
+                          active
+                            ? 'bg-[#1E3A8A] text-white shadow-2xs'
+                            : 'text-slate-600 hover:bg-slate-100'
+                        }`}
+                      >
+                        {sec.shortName} (Q{sec.startIndex + 1}–{sec.endIndex + 1})
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 w-fit shadow-2xs">
                   {(
@@ -615,9 +746,46 @@ export function ResultScreen({
                           )}
                         </div>
 
-                        <h3 className="mt-4 text-base font-semibold text-[#0F172A] leading-relaxed">
+                        {q.passageEn && (
+                          <details className="mt-4 rounded-xl border border-slate-200 bg-[#F8FAFC] p-3.5 text-xs sm:text-sm text-slate-700">
+                            <summary className="cursor-pointer font-bold text-[#1E3A8A]">
+                              View Reading Passage
+                            </summary>
+                            <p className="mt-2.5 leading-relaxed whitespace-pre-line">
+                              {q.passageEn}
+                            </p>
+                          </details>
+                        )}
+
+                        <h3 className="mt-4 text-base font-semibold text-[#0F172A] leading-relaxed whitespace-pre-line">
                           {solutionLang === 'hi' && q.questionHi ? q.questionHi : q.questionEn}
                         </h3>
+
+                        {q.matrix && q.matrix.length > 0 && (
+                          <div className="mt-3 inline-block overflow-hidden rounded-xl border border-slate-300 bg-[#F8FAFC]">
+                            <table className="border-collapse text-center font-mono text-xs sm:text-sm font-bold text-[#0F172A] tabular-nums">
+                              <tbody>
+                                {q.matrix.map((row, rIdx) => (
+                                  <tr
+                                    key={rIdx}
+                                    className="divide-x divide-slate-300 border-b border-slate-300 last:border-b-0"
+                                  >
+                                    {row.map((cell, cIdx) => (
+                                      <td
+                                        key={cIdx}
+                                        className={`h-9 w-12 px-2 ${
+                                          cell === '?' ? 'bg-amber-100/80 text-[#1E3A8A]' : 'bg-white'
+                                        }`}
+                                      >
+                                        {cell}
+                                      </td>
+                                    ))}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
 
                         <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
                           {OPTION_LETTERS.map((letter, idx) => {
@@ -663,9 +831,15 @@ export function ResultScreen({
 
                         <div className="mt-4 rounded-xl border border-amber-200/80 bg-amber-50/60 p-4 text-sm text-slate-800">
                           <div className="text-xs font-bold uppercase tracking-wide text-[#0F172A]">
-                            Solution Explanation
+                            {solutionLang === 'hi' && q.explanationHi
+                              ? 'विस्तृत हल (Solution Explanation)'
+                              : 'Solution Explanation'}
                           </div>
-                          <p className="mt-1.5 leading-relaxed">{q.explanationEn}</p>
+                          <p className="mt-1.5 leading-relaxed whitespace-pre-line">
+                            {solutionLang === 'hi' && q.explanationHi
+                              ? q.explanationHi
+                              : q.explanationEn}
+                          </p>
                         </div>
                       </article>
                     );

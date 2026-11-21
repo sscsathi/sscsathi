@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
   Check,
@@ -10,6 +10,7 @@ import {
   Flag,
   Languages,
   LayoutGrid,
+  Lock,
   PanelRightClose,
   PanelRightOpen,
   X,
@@ -37,14 +38,31 @@ export function ExamInterface({
   onFinishTest,
   onExitTest,
 }: ExamInterfaceProps) {
-  const totalSeconds = test.durationMinutes * 60;
-  const [secondsLeft, setSecondsLeft] = useState<number>(totalSeconds);
-  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const sections = test.sections ?? [];
+  const isStrictSectional = Boolean(test.strictSectionTiming && sections.length > 0);
+
+  const [activeSectionIndex, setActiveSectionIndex] = useState<number>(0);
+  const activeSection = isStrictSectional ? sections[activeSectionIndex] : undefined;
+  const isLastSection = !isStrictSectional || activeSectionIndex >= sections.length - 1;
+
+  const sectionStartIndex = activeSection ? activeSection.startIndex : 0;
+  const sectionEndIndex = activeSection ? activeSection.endIndex : test.questions.length - 1;
+  const activeDurationSeconds = activeSection
+    ? activeSection.durationMinutes * 60
+    : test.durationMinutes * 60;
+
+  const [secondsLeft, setSecondsLeft] = useState<number>(activeDurationSeconds);
+  const [elapsedPriorSeconds, setElapsedPriorSeconds] = useState<number>(0);
+  const [currentIndex, setCurrentIndex] = useState<number>(sectionStartIndex);
+  const [sectionNotice, setSectionNotice] = useState<string | null>(null);
   const [isDesktopPaletteOpen, setIsDesktopPaletteOpen] = useState<boolean>(true);
   const [isMobilePaletteOpen, setIsMobilePaletteOpen] = useState<boolean>(false);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState<boolean>(false);
   const [isExitModalOpen, setIsExitModalOpen] = useState<boolean>(false);
   const [language, setLanguage] = useState<QuestionLanguage>('en');
+
+  // Guard against double-triggering section transition or test submission on 0s
+  const zeroHandledForSectionRef = useRef<number>(-1);
 
   const [responses, setResponses] = useState<Record<string, QuestionResponse>>(() => {
     const init: Record<string, QuestionResponse> = {};
@@ -71,36 +89,103 @@ export function ExamInterface({
       : currentQuestion.optionsEn;
 
   const handleFinalizeSubmit = useCallback(
-    (currentResponses: Record<string, QuestionResponse>, remainingSeconds: number) => {
-      const timeTaken = Math.max(1, totalSeconds - remainingSeconds);
-      const result = calculateExamResult(test, currentResponses, timeTaken);
+    (
+      currentResponses: Record<string, QuestionResponse>,
+      remainingSeconds: number,
+      priorElapsed: number
+    ) => {
+      const currentElapsed = Math.max(0, activeDurationSeconds - remainingSeconds);
+      const totalTimeTaken = Math.max(1, priorElapsed + currentElapsed);
+      const result = calculateExamResult(test, currentResponses, totalTimeTaken);
       onFinishTest(result);
     },
-    [onFinishTest, test, totalSeconds]
+    [activeDurationSeconds, onFinishTest, test]
+  );
+
+  const handleAdvanceSection = useCallback(
+    (autoTriggered: boolean) => {
+      if (!isStrictSectional || activeSectionIndex >= sections.length - 1) return;
+
+      const prevSection = sections[activeSectionIndex];
+      const nextIdx = activeSectionIndex + 1;
+      const nextSection = sections[nextIdx];
+      const spentInPrev = autoTriggered
+        ? prevSection.durationMinutes * 60
+        : Math.max(1, prevSection.durationMinutes * 60 - secondsLeft);
+
+      setElapsedPriorSeconds((prev) => prev + spentInPrev);
+      setActiveSectionIndex(nextIdx);
+      setSecondsLeft(nextSection.durationMinutes * 60);
+      setCurrentIndex(nextSection.startIndex);
+      setIsSubmitModalOpen(false);
+      setIsMobilePaletteOpen(false);
+
+      const firstNextQ = test.questions[nextSection.startIndex];
+      if (firstNextQ) {
+        setResponses((prev) => {
+          const existing = prev[firstNextQ.id];
+          if (existing && existing.status === 'not-visited') {
+            return {
+              ...prev,
+              [firstNextQ.id]: {
+                ...existing,
+                status: 'not-answered',
+              },
+            };
+          }
+          return prev;
+        });
+      }
+
+      setSectionNotice(
+        autoTriggered
+          ? `Time up for ${prevSection.name}! Automatically moved to Section ${nextIdx + 1}: ${nextSection.name}.`
+          : `Submitted ${prevSection.name}. Now attempting Section ${nextIdx + 1}: ${nextSection.name}.`
+      );
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    [activeSectionIndex, isStrictSectional, secondsLeft, sections, test.questions]
   );
 
   useEffect(() => {
+    if (!sectionNotice) return;
+    const t = window.setTimeout(() => setSectionNotice(null), 4500);
+    return () => window.clearTimeout(t);
+  }, [sectionNotice]);
+
+  // Countdown tick — resets cleanly whenever activeSectionIndex changes
+  useEffect(() => {
     const interval = window.setInterval(() => {
-      setSecondsLeft((prev) => {
-        if (prev <= 1) {
-          window.clearInterval(interval);
-          return 0;
-        }
-        return prev - 1;
-      });
+      setSecondsLeft((prev) => (prev <= 1 ? 0 : prev - 1));
     }, 1000);
     return () => window.clearInterval(interval);
-  }, []);
+  }, [activeSectionIndex]);
 
+  // Handle timer expiry (auto-advance section or auto-submit full test)
   useEffect(() => {
-    if (secondsLeft === 0) {
-      handleFinalizeSubmit(responses, 0);
+    if (secondsLeft !== 0) return;
+    if (zeroHandledForSectionRef.current === activeSectionIndex) return;
+    zeroHandledForSectionRef.current = activeSectionIndex;
+
+    if (isStrictSectional && !isLastSection) {
+      handleAdvanceSection(true);
+    } else {
+      handleFinalizeSubmit(responses, 0, elapsedPriorSeconds);
     }
-  }, [secondsLeft, responses, handleFinalizeSubmit]);
+  }, [
+    activeSectionIndex,
+    elapsedPriorSeconds,
+    handleAdvanceSection,
+    handleFinalizeSubmit,
+    isLastSection,
+    isStrictSectional,
+    responses,
+    secondsLeft,
+  ]);
 
   const jumpToQuestion = useCallback(
     (targetIdx: number) => {
-      if (targetIdx < 0 || targetIdx >= test.questions.length) return;
+      if (targetIdx < sectionStartIndex || targetIdx > sectionEndIndex) return;
       const targetQ = test.questions[targetIdx];
       setResponses((prev) => {
         const existing = prev[targetQ.id];
@@ -118,7 +203,7 @@ export function ExamInterface({
       setCurrentIndex(targetIdx);
       setIsMobilePaletteOpen(false);
     },
-    [test.questions]
+    [sectionEndIndex, sectionStartIndex, test.questions]
   );
 
   const handleSelectOption = useCallback(
@@ -166,7 +251,7 @@ export function ExamInterface({
       };
 
       const nextIdx = currentIndex + 1;
-      if (nextIdx < test.questions.length) {
+      if (nextIdx <= sectionEndIndex) {
         const nextQ = test.questions[nextIdx];
         if (nextMap[nextQ.id].status === 'not-visited') {
           nextMap[nextQ.id] = { ...nextMap[nextQ.id], status: 'not-answered' };
@@ -175,10 +260,10 @@ export function ExamInterface({
       return nextMap;
     });
 
-    if (currentIndex + 1 < test.questions.length) {
+    if (currentIndex < sectionEndIndex) {
       setCurrentIndex((i) => i + 1);
     }
-  }, [currentIndex, currentQuestion.id, test.questions]);
+  }, [currentIndex, currentQuestion.id, sectionEndIndex, test.questions]);
 
   const handleMarkForReviewAndNext = () => {
     setResponses((prev) => {
@@ -195,7 +280,7 @@ export function ExamInterface({
       };
 
       const nextIdx = currentIndex + 1;
-      if (nextIdx < test.questions.length) {
+      if (nextIdx <= sectionEndIndex) {
         const nextQ = test.questions[nextIdx];
         if (nextMap[nextQ.id].status === 'not-visited') {
           nextMap[nextQ.id] = { ...nextMap[nextQ.id], status: 'not-answered' };
@@ -204,12 +289,12 @@ export function ExamInterface({
       return nextMap;
     });
 
-    if (currentIndex + 1 < test.questions.length) {
+    if (currentIndex < sectionEndIndex) {
       setCurrentIndex((i) => i + 1);
     }
   };
 
-  // Keyboard shortcuts for quick CBT navigation
+  // Keyboard shortcuts for quick CBT navigation (strictly respects section bounds)
   useEffect(() => {
     if (isSubmitModalOpen || isExitModalOpen) return;
     const onKeyDown = (e: KeyboardEvent) => {
@@ -218,8 +303,9 @@ export function ExamInterface({
       else if (e.key === '2' || e.key.toLowerCase() === 'b') handleSelectOption(1);
       else if (e.key === '3' || e.key.toLowerCase() === 'c') handleSelectOption(2);
       else if (e.key === '4' || e.key.toLowerCase() === 'd') handleSelectOption(3);
-      else if (e.key === 'ArrowRight') handleSaveAndNext();
-      else if (e.key === 'ArrowLeft' && currentIndex > 0) jumpToQuestion(currentIndex - 1);
+      else if (e.key === 'ArrowRight' && currentIndex < sectionEndIndex) handleSaveAndNext();
+      else if (e.key === 'ArrowLeft' && currentIndex > sectionStartIndex)
+        jumpToQuestion(currentIndex - 1);
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
@@ -230,32 +316,53 @@ export function ExamInterface({
     isExitModalOpen,
     isSubmitModalOpen,
     jumpToQuestion,
+    sectionEndIndex,
+    sectionStartIndex,
   ]);
 
-  const statusCounts = useMemo(() => {
-    let answered = 0;
-    let notAnswered = 0;
-    let marked = 0;
-    let notVisited = 0;
+  const activeScopeQuestions = useMemo(
+    () => test.questions.slice(sectionStartIndex, sectionEndIndex + 1),
+    [sectionEndIndex, sectionStartIndex, test.questions]
+  );
 
-    for (const q of test.questions) {
-      const st = responses[q.id]?.status ?? 'not-visited';
-      if (st === 'answered') answered += 1;
-      else if (st === 'not-answered') notAnswered += 1;
-      else if (st === 'marked' || st === 'answered-marked') marked += 1;
-      else notVisited += 1;
-    }
+  const countStatuses = useCallback(
+    (questionsList: typeof test.questions) => {
+      let answered = 0;
+      let notAnswered = 0;
+      let marked = 0;
+      let notVisited = 0;
 
-    return { answered, notAnswered, marked, notVisited };
-  }, [responses, test.questions]);
+      for (const q of questionsList) {
+        const st = responses[q.id]?.status ?? 'not-visited';
+        if (st === 'answered') answered += 1;
+        else if (st === 'not-answered') notAnswered += 1;
+        else if (st === 'marked' || st === 'answered-marked') marked += 1;
+        else notVisited += 1;
+      }
 
-  const attemptedCount = useMemo(
-    () =>
-      test.questions.filter((q) => responses[q.id]?.selectedIndex !== null).length,
-    [responses, test.questions]
+      return { answered, notAnswered, marked, notVisited };
+    },
+    [responses]
+  );
+
+  const sectionStatusCounts = useMemo(
+    () => countStatuses(activeScopeQuestions),
+    [activeScopeQuestions, countStatuses]
+  );
+
+  const overallStatusCounts = useMemo(
+    () => countStatuses(test.questions),
+    [countStatuses, test.questions]
+  );
+
+  const sectionAttemptedCount = useMemo(
+    () => activeScopeQuestions.filter((q) => responses[q.id]?.selectedIndex !== null).length,
+    [activeScopeQuestions, responses]
   );
 
   const isTimerLow = secondsLeft < 120;
+  const nextSection =
+    isStrictSectional && !isLastSection ? sections[activeSectionIndex + 1] : undefined;
 
   const getPaletteButtonClass = (status: QuestionStatus, isCurrent: boolean) => {
     const ring = isCurrent ? 'ring-2 ring-[#0F172A] ring-offset-2' : '';
@@ -276,10 +383,15 @@ export function ExamInterface({
   const renderPaletteContent = () => (
     <div className="flex h-full flex-col bg-white">
       <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3.5">
-        <div>
-          <h2 className="text-sm font-bold text-[#0F172A]">Question Palette</h2>
+        <div className="min-w-0">
+          <h2 className="truncate text-sm font-bold text-[#0F172A]">
+            {activeSection ? activeSection.shortName : 'Question Palette'}
+          </h2>
           <p className="text-xs text-slate-500 tabular-nums">
-            {attemptedCount} of {test.questions.length} answered
+            {sectionAttemptedCount} of {activeScopeQuestions.length} answered
+            {activeSection
+              ? ` (Q${activeSection.startIndex + 1}–Q${activeSection.endIndex + 1})`
+              : ''}
           </p>
         </div>
         <button
@@ -300,49 +412,50 @@ export function ExamInterface({
       <div className="grid grid-cols-2 gap-2.5 border-b border-slate-200 bg-[#F8FAFC] p-4 text-xs">
         <div className="flex items-center gap-2">
           <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-emerald-600 font-mono text-[11px] font-bold text-white tabular-nums">
-            {statusCounts.answered}
+            {sectionStatusCounts.answered}
           </span>
           <span className="text-slate-700 font-semibold">Answered</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-rose-600 font-mono text-[11px] font-bold text-white tabular-nums">
-            {statusCounts.notAnswered}
+            {sectionStatusCounts.notAnswered}
           </span>
           <span className="text-slate-700 font-semibold">Not Answered</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-purple-600 font-mono text-[11px] font-bold text-white tabular-nums">
-            {statusCounts.marked}
+            {sectionStatusCounts.marked}
           </span>
           <span className="text-slate-700 font-semibold">Marked for Review</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-200 font-mono text-[11px] font-bold text-slate-700 tabular-nums">
-            {statusCounts.notVisited}
+            {sectionStatusCounts.notVisited}
           </span>
           <span className="text-slate-700 font-semibold">Not Visited</span>
         </div>
       </div>
 
-      {/* Numbered Grid */}
+      {/* Numbered Grid (Strictly scoped to current section; displays global Q1..Q100 numbering) */}
       <div className="flex-1 overflow-y-auto p-4">
         <div className="grid grid-cols-5 gap-2.5">
-          {test.questions.map((q, idx) => {
+          {activeScopeQuestions.map((q, localIdx) => {
+            const globalIdx = sectionStartIndex + localIdx;
             const st = responses[q.id]?.status ?? 'not-visited';
-            const isCurrent = idx === currentIndex;
+            const isCurrent = globalIdx === currentIndex;
             return (
               <button
                 key={q.id}
                 type="button"
-                onClick={() => jumpToQuestion(idx)}
-                aria-label={`Question ${idx + 1}, status ${st}`}
+                onClick={() => jumpToQuestion(globalIdx)}
+                aria-label={`Question ${globalIdx + 1}, status ${st}`}
                 aria-current={isCurrent ? 'step' : undefined}
                 className={`relative flex h-11 w-full items-center justify-center rounded-lg border font-mono text-sm font-bold transition-all tabular-nums ${getPaletteButtonClass(
                   st,
                   isCurrent
                 )}`}
               >
-                {idx + 1}
+                {globalIdx + 1}
                 {st === 'answered-marked' && (
                   <span
                     title="Answered and marked for review"
@@ -363,11 +476,13 @@ export function ExamInterface({
           onClick={() => setIsSubmitModalOpen(true)}
           className="w-full min-h-[44px] rounded-xl bg-[#F59E0B] px-4 py-2.5 text-sm font-bold text-[#0F172A] transition-colors hover:bg-amber-400"
         >
-          Submit Test
+          {isStrictSectional && !isLastSection ? 'Submit Section →' : 'Submit Test'}
         </button>
       </div>
     </div>
   );
+
+  const modalCounts = isStrictSectional && !isLastSection ? sectionStatusCounts : overallStatusCounts;
 
   return (
     <div className="flex min-h-screen flex-col bg-[#F8FAFC]">
@@ -391,7 +506,9 @@ export function ExamInterface({
             />
             <div className="min-w-0">
               <div className="text-[11px] font-semibold uppercase tracking-wider text-[#F59E0B]">
-                SSC Sathi · Eduquity CBT
+                {isStrictSectional
+                  ? `SSC Sathi · Section ${activeSectionIndex + 1} of ${sections.length}`
+                  : 'SSC Sathi · CBT Mode'}
               </div>
               <h1 className="truncate text-sm sm:text-base font-bold text-white">
                 {test.title}
@@ -400,7 +517,7 @@ export function ExamInterface({
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            {/* Bold Countdown Timer with subtle red pulse when under 2 minutes */}
+            {/* Bold Section/Test Countdown Timer */}
             <div
               role="timer"
               aria-live="off"
@@ -441,11 +558,65 @@ export function ExamInterface({
               onClick={() => setIsSubmitModalOpen(true)}
               className="inline-flex h-9 items-center justify-center rounded-lg bg-[#F59E0B] px-3 sm:px-4 text-xs sm:text-sm font-bold text-[#0F172A] transition-colors hover:bg-amber-400 whitespace-nowrap"
             >
-              Submit Test
+              {isStrictSectional && !isLastSection ? 'Submit Section' : 'Submit Test'}
             </button>
           </div>
         </div>
+
+        {/* Strict Sectional Lock Bar */}
+        {isStrictSectional && (
+          <div className="border-t border-slate-800 bg-slate-900/95">
+            <div className="mx-auto flex max-w-[1440px] items-center gap-2 overflow-x-auto px-3 py-2 sm:px-6">
+              {sections.map((sec, idx) => {
+                const isDone = idx < activeSectionIndex;
+                const isCurrent = idx === activeSectionIndex;
+                const isLocked = idx > activeSectionIndex;
+                return (
+                  <div
+                    key={sec.id}
+                    aria-current={isCurrent ? 'step' : undefined}
+                    title={
+                      isLocked
+                        ? 'Locked until the current section timer finishes or is submitted'
+                        : isDone
+                          ? 'Section completed and locked'
+                          : `${sec.name} — active (${sec.durationMinutes}:00 timer)`
+                    }
+                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-bold whitespace-nowrap tabular-nums ${
+                      isCurrent
+                        ? 'border-[#F59E0B] bg-[#1E3A8A] text-white shadow-xs'
+                        : isDone
+                          ? 'border-emerald-700/60 bg-emerald-950/60 text-emerald-300'
+                          : 'border-slate-700/70 bg-slate-800/50 text-slate-400'
+                    }`}
+                  >
+                    {isDone ? (
+                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-400" aria-hidden="true" />
+                    ) : isLocked ? (
+                      <Lock className="h-3 w-3 shrink-0 text-slate-500" aria-hidden="true" />
+                    ) : (
+                      <Clock className="h-3.5 w-3.5 shrink-0 text-[#F59E0B]" aria-hidden="true" />
+                    )}
+                    <span>
+                      {idx + 1}. {sec.shortName}
+                    </span>
+                    <span className="text-[10px] opacity-75">
+                      (Q{sec.startIndex + 1}–{sec.endIndex + 1})
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </header>
+
+      {/* Section Transition Notice */}
+      {sectionNotice && (
+        <div className="border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-center text-xs sm:text-sm font-bold text-amber-950">
+          {sectionNotice}
+        </div>
+      )}
 
       {/* Main CBT Workspace */}
       <div className="mx-auto flex w-full max-w-[1440px] flex-1 overflow-hidden">
@@ -513,9 +684,43 @@ export function ExamInterface({
                 </div>
               )}
 
-              <h2 className="text-base sm:text-lg font-semibold leading-relaxed text-[#0F172A]">
+              {/* Reading Comprehension Passage Box */}
+              {currentQuestion.passageEn && (
+                <div className="mb-5 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-[#F8FAFC] p-4 text-sm leading-relaxed text-slate-800 whitespace-pre-line">
+                  <div className="mb-2 text-xs font-extrabold uppercase tracking-wider text-[#1E3A8A]">
+                    Read the passage carefully
+                  </div>
+                  {currentQuestion.passageEn}
+                </div>
+              )}
+
+              <h2 className="text-base sm:text-lg font-semibold leading-relaxed text-[#0F172A] whitespace-pre-line">
                 {displayedQuestionText}
               </h2>
+
+              {/* Structured Number Matrix (e.g., Q15) */}
+              {currentQuestion.matrix && currentQuestion.matrix.length > 0 && (
+                <div className="mt-4 inline-block overflow-hidden rounded-xl border border-slate-300 bg-[#F8FAFC] shadow-2xs">
+                  <table className="border-collapse text-center font-mono text-sm sm:text-base font-bold text-[#0F172A] tabular-nums">
+                    <tbody>
+                      {currentQuestion.matrix.map((row, rIdx) => (
+                        <tr key={rIdx} className="divide-x divide-slate-300 border-b border-slate-300 last:border-b-0">
+                          {row.map((cell, cIdx) => (
+                            <td
+                              key={cIdx}
+                              className={`h-11 w-14 sm:w-16 px-3 ${
+                                cell === '?' ? 'bg-amber-100/80 text-[#1E3A8A]' : 'bg-white'
+                              }`}
+                            >
+                              {cell}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
 
               {/* Smooth 4 Option Selection Cards */}
               <div className="mt-6 space-y-3" role="radiogroup" aria-label="Answer options">
@@ -580,7 +785,7 @@ export function ExamInterface({
                   className="inline-flex min-h-[44px] flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-xl border border-purple-200 bg-purple-50 px-3.5 py-2 text-xs sm:text-sm font-semibold text-purple-800 transition-colors hover:bg-purple-100 whitespace-nowrap"
                 >
                   <Flag className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  <span>Mark for Review & Next</span>
+                  <span>Mark for Review &amp; Next</span>
                 </button>
 
                 <button
@@ -598,7 +803,7 @@ export function ExamInterface({
                 <button
                   type="button"
                   onClick={() => jumpToQuestion(currentIndex - 1)}
-                  disabled={currentIndex === 0}
+                  disabled={currentIndex <= sectionStartIndex}
                   className="inline-flex min-h-[44px] items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none"
                 >
                   <ChevronLeft className="h-4 w-4" aria-hidden="true" />
@@ -611,11 +816,9 @@ export function ExamInterface({
                   className="inline-flex min-h-[44px] flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-xl bg-[#0F172A] px-5 py-2 text-xs sm:text-sm font-bold text-white shadow-xs transition-colors hover:bg-slate-800 whitespace-nowrap"
                 >
                   <span>
-                    {currentIndex === test.questions.length - 1
-                      ? 'Save Response'
-                      : 'Save & Next'}
+                    {currentIndex === sectionEndIndex ? 'Save Response' : 'Save & Next'}
                   </span>
-                  {currentIndex < test.questions.length - 1 && (
+                  {currentIndex < sectionEndIndex && (
                     <ChevronRight className="h-4 w-4 shrink-0 text-[#F59E0B]" aria-hidden="true" />
                   )}
                 </button>
@@ -645,7 +848,7 @@ export function ExamInterface({
         </div>
       )}
 
-      {/* Submit Test Confirmation Modal */}
+      {/* Submit Section / Submit Test Confirmation Modal */}
       {isSubmitModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
           <div
@@ -655,35 +858,39 @@ export function ExamInterface({
             className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
           >
             <h2 id="submit-modal-title" className="text-lg font-bold text-[#0F172A]">
-              Submit {test.title}?
+              {isStrictSectional && !isLastSection && activeSection
+                ? `Submit Section ${activeSectionIndex + 1}: ${activeSection.shortName}?`
+                : `Submit ${test.title}?`}
             </h2>
             <p className="mt-1 text-sm text-slate-600">
-              Review your question summary before finalizing your submission.
+              {isStrictSectional && !isLastSection && nextSection
+                ? `Once submitted, this section will be locked and you will move immediately to Section ${activeSectionIndex + 2}: ${nextSection.name} (${nextSection.durationMinutes}:00 timer).`
+                : 'Review your question summary before finalizing your submission.'}
             </p>
 
             <div className="mt-4 grid grid-cols-2 gap-3 text-sm tabular-nums">
               <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
                 <div className="text-xs font-medium text-emerald-700">Answered</div>
                 <div className="mt-0.5 text-xl font-bold text-emerald-900">
-                  {statusCounts.answered}
+                  {modalCounts.answered}
                 </div>
               </div>
               <div className="rounded-xl border border-rose-200 bg-rose-50 p-3">
                 <div className="text-xs font-medium text-rose-700">Not Answered</div>
                 <div className="mt-0.5 text-xl font-bold text-rose-900">
-                  {statusCounts.notAnswered}
+                  {modalCounts.notAnswered}
                 </div>
               </div>
               <div className="rounded-xl border border-purple-200 bg-purple-50 p-3">
                 <div className="text-xs font-medium text-purple-700">Marked for Review</div>
                 <div className="mt-0.5 text-xl font-bold text-purple-900">
-                  {statusCounts.marked}
+                  {modalCounts.marked}
                 </div>
               </div>
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                 <div className="text-xs font-medium text-slate-600">Not Visited</div>
                 <div className="mt-0.5 text-xl font-bold text-[#0F172A]">
-                  {statusCounts.notVisited}
+                  {modalCounts.notVisited}
                 </div>
               </div>
             </div>
@@ -694,14 +901,20 @@ export function ExamInterface({
                 onClick={() => setIsSubmitModalOpen(false)}
                 className="min-h-[44px] rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
               >
-                Resume Test
+                {isStrictSectional && !isLastSection ? 'Continue Section' : 'Resume Test'}
               </button>
               <button
                 type="button"
-                onClick={() => handleFinalizeSubmit(responses, secondsLeft)}
+                onClick={() => {
+                  if (isStrictSectional && !isLastSection) {
+                    handleAdvanceSection(false);
+                  } else {
+                    handleFinalizeSubmit(responses, secondsLeft, elapsedPriorSeconds);
+                  }
+                }}
                 className="min-h-[44px] rounded-xl bg-[#F59E0B] px-5 py-2 text-sm font-bold text-[#0F172A] hover:bg-amber-400"
               >
-                Confirm Submit
+                {isStrictSectional && !isLastSection ? 'Lock & Next Section' : 'Confirm Submit'}
               </button>
             </div>
           </div>

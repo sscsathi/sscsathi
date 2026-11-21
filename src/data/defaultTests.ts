@@ -1,6 +1,8 @@
 import { MockTest } from '../types/exam';
+import { FULL_MOCK_30_SEPT_SHIFT2 } from './mock30SeptShift2';
 
 export const DEFAULT_MOCK_TESTS: MockTest[] = [
+  FULL_MOCK_30_SEPT_SHIFT2,
   {
     id: 'ssc-cgl-30-sept-shift2-math-2026-pyq-1',
     title: '30 Sept Shift 2 Math 2026 PYQ Mock Test 1',
@@ -8,6 +10,7 @@ export const DEFAULT_MOCK_TESTS: MockTest[] = [
     category: 'Quantitative Aptitude',
     examTags: ['CGL'],
     seriesType: 'pyq',
+    pyqFormat: 'sectional',
     durationMinutes: 15,
     positiveMarks: 2,
     negativeMarks: 0.5,

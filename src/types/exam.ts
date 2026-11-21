@@ -14,6 +14,8 @@ export interface Question {
   topic: string;
   questionEn: string;
   questionHi?: string;
+  passageEn?: string;
+  matrix?: string[][];
   optionsEn: [string, string, string, string];
   optionsHi?: [string, string, string, string];
   correctIndex: OptionIndex;
@@ -24,6 +26,7 @@ export interface Question {
 export type ExamTag = 'CGL' | 'CHSL' | 'MTS' | 'RRB NTPC';
 
 export type TestCategory =
+  | 'Full Mock'
   | 'English'
   | 'General Awareness'
   | 'Quantitative Aptitude'
@@ -31,6 +34,16 @@ export type TestCategory =
   | 'Custom';
 
 export type TestSeriesType = 'live' | 'free' | 'pyq';
+export type PyqFormat = 'full' | 'sectional';
+
+export interface TestSection {
+  id: string;
+  name: string;
+  shortName: string;
+  startIndex: number;
+  endIndex: number;
+  durationMinutes: number;
+}
 
 export interface MockTest {
   id: string;
@@ -39,9 +52,12 @@ export interface MockTest {
   category: TestCategory;
   examTags: ExamTag[];
   seriesType?: TestSeriesType;
+  pyqFormat?: PyqFormat;
   durationMinutes: number;
   positiveMarks: number;
   negativeMarks: number;
+  strictSectionTiming?: boolean;
+  sections?: TestSection[];
   isCustom?: boolean;
   createdAt: string;
   questions: Question[];

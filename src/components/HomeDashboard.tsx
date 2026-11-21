@@ -72,8 +72,16 @@ export function HomeDashboard({
 }: HomeDashboardProps) {
   const [selectedCategory, setSelectedCategory] = useState<'All' | TestCategory>('All');
   const [selectedExam, setSelectedExam] = useState<QuickExamFilter>('ALL');
+  const [pyqSubTab, setPyqSubTab] = useState<'full' | 'sectional'>('full');
   const [isAttemptedModalOpen, setIsAttemptedModalOpen] = useState<boolean>(false);
   const testsSectionRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (activeSeriesFilter === 'pyq') {
+      setPyqSubTab('full');
+      setSelectedCategory('All');
+    }
+  }, [activeSeriesFilter]);
 
   useEffect(() => {
     if (!isAttemptedModalOpen) return;
@@ -118,12 +126,28 @@ export function HomeDashboard({
     return counts;
   }, [tests]);
 
+  const pyqCounts = useMemo(() => {
+    let full = 0;
+    let sectional = 0;
+    for (const t of tests) {
+      if ((t.seriesType ?? 'free') === 'pyq') {
+        if (t.pyqFormat === 'full') full += 1;
+        else sectional += 1;
+      }
+    }
+    return { full, sectional };
+  }, [tests]);
+
   const filteredTests = useMemo(() => {
     return tests.filter((t) => {
       const sType = t.seriesType ?? 'free';
       if (activeSeriesFilter === 'live' && sType !== 'live') return false;
       if (activeSeriesFilter === 'free' && sType !== 'free' && sType !== 'live') return false;
-      if (activeSeriesFilter === 'pyq' && sType !== 'pyq') return false;
+      if (activeSeriesFilter === 'pyq') {
+        if (sType !== 'pyq') return false;
+        if (pyqSubTab === 'full' && t.pyqFormat !== 'full') return false;
+        if (pyqSubTab === 'sectional' && t.pyqFormat === 'full') return false;
+      }
 
       if (selectedExam !== 'ALL' && !(t.examTags ?? []).includes(selectedExam)) {
         return false;
@@ -135,11 +159,12 @@ export function HomeDashboard({
       }
       return t.category === selectedCategory;
     });
-  }, [tests, activeSeriesFilter, selectedExam, selectedCategory]);
+  }, [tests, activeSeriesFilter, pyqSubTab, selectedExam, selectedCategory]);
 
   const todaysQuizzes = useMemo(() => {
-    const mini = tests.filter((t) => t.durationMinutes <= 10).slice(0, 2);
-    return mini.length > 0 ? mini : tests.slice(0, 2);
+    const quizPool = tests.filter((t) => t.pyqFormat !== 'full');
+    const mini = quizPool.filter((t) => t.durationMinutes <= 10).slice(0, 2);
+    return mini.length > 0 ? mini : quizPool.slice(0, 2);
   }, [tests]);
 
   const groupedAttempts = useMemo<GroupedTestAttempt[]>(() => {
@@ -589,6 +614,49 @@ export function HomeDashboard({
 
       {/* Filtered Mock Tests List */}
       <section ref={testsSectionRef} className="mt-7 scroll-mt-20">
+        {activeSeriesFilter === 'pyq' && (
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div
+              role="tablist"
+              aria-label="PYQ Series test type"
+              className="inline-flex items-center rounded-xl border border-[#E2E8F0] bg-[#FFFFFF] p-1 shadow-xs"
+            >
+              <button
+                type="button"
+                role="tab"
+                aria-selected={pyqSubTab === 'full'}
+                onClick={() => {
+                  setPyqSubTab('full');
+                  setSelectedCategory('All');
+                }}
+                className={`min-h-[38px] rounded-lg px-4 py-1.5 text-xs sm:text-sm font-bold transition-all whitespace-nowrap tabular-nums ${
+                  pyqSubTab === 'full'
+                    ? 'bg-[#1E3A8A] text-white shadow-xs'
+                    : 'text-slate-600 hover:bg-[#F4F6FB] hover:text-[#1E3A8A]'
+                }`}
+              >
+                Full Mock ({pyqCounts.full})
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={pyqSubTab === 'sectional'}
+                onClick={() => {
+                  setPyqSubTab('sectional');
+                  setSelectedCategory('All');
+                }}
+                className={`min-h-[38px] rounded-lg px-4 py-1.5 text-xs sm:text-sm font-bold transition-all whitespace-nowrap tabular-nums ${
+                  pyqSubTab === 'sectional'
+                    ? 'bg-[#1E3A8A] text-white shadow-xs'
+                    : 'text-slate-600 hover:bg-[#F4F6FB] hover:text-[#1E3A8A]'
+                }`}
+              >
+                Sectional ({pyqCounts.sectional})
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-base sm:text-lg font-extrabold text-[#0F172A]">
@@ -599,31 +667,33 @@ export function HomeDashboard({
             </p>
           </div>
 
-          <div
-            className="flex items-center gap-1 overflow-x-auto rounded-xl border border-[#E2E8F0] bg-[#FFFFFF] p-1 shadow-xs"
-            role="tablist"
-            aria-label="Filter mock tests by subject"
-          >
-            {categories.map((cat) => {
-              const active = selectedCategory === cat;
-              return (
-                <button
-                  key={cat}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
-                    active
-                      ? 'bg-[#1E3A8A] text-white shadow-xs'
-                      : 'text-slate-600 hover:bg-[#F4F6FB] hover:text-[#1E3A8A]'
-                  }`}
-                >
-                  {cat}
-                </button>
-              );
-            })}
-          </div>
+          {!(activeSeriesFilter === 'pyq' && pyqSubTab === 'full') && (
+            <div
+              className="flex items-center gap-1 overflow-x-auto rounded-xl border border-[#E2E8F0] bg-[#FFFFFF] p-1 shadow-xs"
+              role="tablist"
+              aria-label="Filter mock tests by subject"
+            >
+              {categories.map((cat) => {
+                const active = selectedCategory === cat;
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
+                      active
+                        ? 'bg-[#1E3A8A] text-white shadow-xs'
+                        : 'text-slate-600 hover:bg-[#F4F6FB] hover:text-[#1E3A8A]'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {filteredTests.length === 0 ? (
@@ -690,6 +760,14 @@ export function HomeDashboard({
                           <>
                             <span aria-hidden="true">·</span>
                             <span className="font-bold text-emerald-700">EN / HI</span>
+                          </>
+                        )}
+                        {test.strictSectionTiming && test.sections && (
+                          <>
+                            <span aria-hidden="true">·</span>
+                            <span className="font-bold text-[#1E3A8A]">
+                              {test.sections.length} × 15m Sectional Timer
+                            </span>
                           </>
                         )}
                       </div>

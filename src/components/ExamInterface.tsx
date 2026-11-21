@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type TouchEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { motion } from 'motion/react';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -62,9 +63,17 @@ export function ExamInterface({
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState<boolean>(false);
   const [isExitModalOpen, setIsExitModalOpen] = useState<boolean>(false);
   const [language, setLanguage] = useState<QuestionLanguage>(initialLanguage);
+  const [swipeOffset, setSwipeOffset] = useState<number>(0);
+  const [swipeSlideDir, setSwipeSlideDir] = useState<'next' | 'prev' | null>(null);
 
   // Guard against double-triggering section transition or test submission on 0s
   const zeroHandledForSectionRef = useRef<number>(-1);
+  // Touch swipe tracking (axis-locked so vertical passage scrolling is never disturbed)
+  const touchGestureRef = useRef<{
+    startX: number;
+    startY: number;
+    lockedAxis: 'x' | 'y' | null;
+  } | null>(null);
 
   const [responses, setResponses] = useState<Record<string, QuestionResponse>>(() => {
     const init: Record<string, QuestionResponse> = {};
@@ -294,6 +303,86 @@ export function ExamInterface({
     if (currentIndex < sectionEndIndex) {
       setCurrentIndex((i) => i + 1);
     }
+  };
+
+  // Touch swipe handlers for smooth Left (Save & Next) / Right (Prev) navigation within active section
+  const handleQuestionTouchStart = (e: TouchEvent<HTMLDivElement>) => {
+    if (
+      e.touches.length !== 1 ||
+      isSubmitModalOpen ||
+      isExitModalOpen ||
+      isMobilePaletteOpen
+    ) {
+      touchGestureRef.current = null;
+      return;
+    }
+    const touch = e.touches[0];
+    touchGestureRef.current = {
+      startX: touch.clientX,
+      startY: touch.clientY,
+      lockedAxis: null,
+    };
+  };
+
+  const handleQuestionTouchMove = (e: TouchEvent<HTMLDivElement>) => {
+    const gesture = touchGestureRef.current;
+    if (!gesture || e.touches.length !== 1) return;
+
+    const touch = e.touches[0];
+    const dx = touch.clientX - gesture.startX;
+    const dy = touch.clientY - gesture.startY;
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+
+    if (gesture.lockedAxis === null) {
+      if (absX < 10 && absY < 10) return;
+      gesture.lockedAxis = absX > absY * 1.2 ? 'x' : 'y';
+    }
+
+    if (gesture.lockedAxis !== 'x') {
+      if (swipeOffset !== 0) setSwipeOffset(0);
+      return;
+    }
+
+    // Damp movement cleanly (and resist further at section boundaries)
+    const atStartEdge = dx > 0 && currentIndex <= sectionStartIndex;
+    const atEndEdge = dx < 0 && currentIndex >= sectionEndIndex;
+    const resistance = atStartEdge || atEndEdge ? 0.12 : 0.32;
+    const clamped = Math.max(-48, Math.min(48, dx * resistance));
+    setSwipeOffset(clamped);
+  };
+
+  const handleQuestionTouchEnd = (e: TouchEvent<HTMLDivElement>) => {
+    const gesture = touchGestureRef.current;
+    touchGestureRef.current = null;
+    setSwipeOffset(0);
+
+    if (!gesture || gesture.lockedAxis === 'y') return;
+    const touch = e.changedTouches[0];
+    if (!touch) return;
+
+    const dx = touch.clientX - gesture.startX;
+    const dy = touch.clientY - gesture.startY;
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+
+    // Require > 55px horizontal travel and clearly horizontal-dominant movement
+    if (absX <= 55 || absX <= absY * 1.2) return;
+
+    if (dx < 0 && currentIndex < sectionEndIndex) {
+      // Swipe Left -> Save selected option (if any) & move to Next Question within current section
+      setSwipeSlideDir('next');
+      handleSaveAndNext();
+    } else if (dx > 0 && currentIndex > sectionStartIndex) {
+      // Swipe Right -> Move to Previous Question within current section
+      setSwipeSlideDir('prev');
+      jumpToQuestion(currentIndex - 1);
+    }
+  };
+
+  const handleQuestionTouchCancel = () => {
+    touchGestureRef.current = null;
+    setSwipeOffset(0);
   };
 
   // Keyboard shortcuts for quick CBT navigation (strictly respects section bounds)
@@ -684,9 +773,36 @@ export function ExamInterface({
             </div>
           </div>
 
-          {/* Middle Question & 4 Options Area */}
-          <div className="min-h-0 flex-1 overflow-y-auto px-2.5 py-2 sm:px-6 sm:py-4">
-            <section className="mx-auto w-full max-w-3xl rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3 sm:p-5 shadow-xs">
+          {/* Middle Question & 4 Options Area (Touch Swipe Left: Save & Next, Right: Prev) */}
+          <div
+            onTouchStart={handleQuestionTouchStart}
+            onTouchMove={handleQuestionTouchMove}
+            onTouchEnd={handleQuestionTouchEnd}
+            onTouchCancel={handleQuestionTouchCancel}
+            className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden touch-pan-y px-2.5 py-2 sm:px-6 sm:py-4"
+          >
+            <motion.section
+              key={currentQuestion.id}
+              initial={
+                swipeSlideDir === 'next'
+                  ? { x: 34, opacity: 0.65 }
+                  : swipeSlideDir === 'prev'
+                    ? { x: -34, opacity: 0.65 }
+                    : false
+              }
+              animate={{ x: swipeOffset, opacity: 1 }}
+              transition={
+                swipeOffset !== 0
+                  ? { duration: 0 }
+                  : { duration: 0.18, ease: 'easeOut' }
+              }
+              onAnimationComplete={() => {
+                if (swipeOffset === 0 && swipeSlideDir !== null) {
+                  setSwipeSlideDir(null);
+                }
+              }}
+              className="mx-auto w-full max-w-3xl rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3 sm:p-5 shadow-xs"
+            >
               {language === 'hi' && !hasHindiForCurrent && (
                 <div className="mb-2 inline-flex items-center rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
                   Hindi translation unavailable for this question — showing English
@@ -784,7 +900,7 @@ export function ExamInterface({
                   );
                 })}
               </div>
-            </section>
+            </motion.section>
           </div>
 
           {/* Pinned Bottom CBT Action Bar */}

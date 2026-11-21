@@ -4,7 +4,7 @@ import { Lock, X } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import { AuthModal } from './components/AuthModal';
 import { ExamInterface } from './components/ExamInterface';
-import { HomeDashboard, PracticeSeriesFilter } from './components/HomeDashboard';
+import { HomeDashboard, HomeTopTab, PracticeSeriesFilter } from './components/HomeDashboard';
 import { Navbar } from './components/Navbar';
 import { QuestionBuilderPanel } from './components/QuestionBuilderPanel';
 import { ResultScreen } from './components/ResultScreen';
@@ -94,6 +94,7 @@ export default function App() {
     () => loadAddedQuestionsMap()
   );
   const [view, setView] = useState<AppView>('home');
+  const [activeHomeTab, setActiveHomeTab] = useState<HomeTopTab>('mocks');
   const [activeSeriesFilter, setActiveSeriesFilter] = useState<PracticeSeriesFilter>('all');
   const [activeTestId, setActiveTestId] = useState<string | null>(null);
   const [activeResult, setActiveResult] = useState<ExamResult | null>(null);
@@ -389,6 +390,7 @@ export default function App() {
 
   const handleQuickFilter = useCallback((series: 'live' | 'pyq') => {
     setView('home');
+    setActiveHomeTab('mocks');
     setActiveSeriesFilter(series);
   }, []);
 
@@ -451,6 +453,7 @@ export default function App() {
         onLogout={handleLogout}
         onNavigateHome={() => {
           setView('home');
+          setActiveHomeTab('mocks');
           setActiveSeriesFilter('all');
         }}
         onQuickFilter={handleQuickFilter}
@@ -461,6 +464,8 @@ export default function App() {
           <HomeDashboard
             tests={allTests}
             history={visibleHistory}
+            activeHomeTab={activeHomeTab}
+            onHomeTabChange={setActiveHomeTab}
             activeSeriesFilter={activeSeriesFilter}
             onSeriesFilterChange={setActiveSeriesFilter}
             onStartTest={handleStartTest}

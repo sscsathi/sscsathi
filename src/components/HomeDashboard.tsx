@@ -26,14 +26,17 @@ import {
 } from './DashboardIcons3D';
 import { ExamResult, ExamTag, MockTest, TestCategory } from '../types/exam';
 import { formatDurationVerbose } from '../utils/scoring';
+import { StudyNotesSection } from './StudyNotesSection';
 
-export type PracticeMode = 'all' | 'pyq';
+export type HomeTopTab = 'mocks' | 'notes';
 export type PracticeSeriesFilter = 'all' | 'live' | 'free' | 'pyq';
 export type QuickExamFilter = 'ALL' | ExamTag;
 
 interface HomeDashboardProps {
   tests: MockTest[];
   history: ExamResult[];
+  activeHomeTab: HomeTopTab;
+  onHomeTabChange: (tab: HomeTopTab) => void;
   activeSeriesFilter: PracticeSeriesFilter;
   onSeriesFilterChange: (filter: PracticeSeriesFilter) => void;
   onStartTest: (test: MockTest) => void;
@@ -59,6 +62,8 @@ const BASE_CATEGORIES: Array<'All' | TestCategory> = [
 export function HomeDashboard({
   tests,
   history,
+  activeHomeTab,
+  onHomeTabChange,
   activeSeriesFilter,
   onSeriesFilterChange,
   onStartTest,
@@ -78,8 +83,6 @@ export function HomeDashboard({
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [isAttemptedModalOpen]);
-
-  const mode: PracticeMode = activeSeriesFilter === 'pyq' ? 'pyq' : 'all';
 
   const hasCustomTests = useMemo(
     () => tests.some((t) => t.isCustom || t.category === 'Custom'),
@@ -224,24 +227,20 @@ export function HomeDashboard({
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-4 sm:px-6 sm:py-6">
-      {/* Mode Switcher Pill — Crisp Pure White Container + Royal-Indigo Active Tab */}
+      {/* Top Segmented Pill Toggle — 2 Tabs: All Mock Tests | Study Notes */}
       <div className="flex justify-center">
         <div
           role="tablist"
-          aria-label="Practice mode switcher"
+          aria-label="Primary dashboard sections"
           className="inline-flex w-full max-w-md items-center rounded-full border border-[#E2E8F0] bg-[#FFFFFF] p-1.5 shadow-[0_6px_20px_-6px_rgba(15,23,42,0.09),0_1px_3px_rgba(15,23,42,0.04)]"
         >
           <button
             type="button"
             role="tab"
-            aria-selected={mode === 'all'}
-            onClick={() => {
-              onSeriesFilterChange('all');
-              setSelectedExam('ALL');
-              setSelectedCategory('All');
-            }}
+            aria-selected={activeHomeTab === 'mocks'}
+            onClick={() => onHomeTabChange('mocks')}
             className={`flex-1 min-h-[40px] rounded-full px-4 py-2 text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap ${
-              mode === 'all'
+              activeHomeTab === 'mocks'
                 ? 'bg-[#1E3A8A] text-white shadow-[0_4px_12px_-2px_rgba(30,58,138,0.4)]'
                 : 'text-slate-600 hover:bg-[#F4F6FB] hover:text-[#1E3A8A]'
             }`}
@@ -251,23 +250,23 @@ export function HomeDashboard({
           <button
             type="button"
             role="tab"
-            aria-selected={mode === 'pyq'}
-            onClick={() => {
-              onSeriesFilterChange('pyq');
-              setSelectedExam('ALL');
-              setSelectedCategory('All');
-            }}
+            aria-selected={activeHomeTab === 'notes'}
+            onClick={() => onHomeTabChange('notes')}
             className={`flex-1 min-h-[40px] rounded-full px-4 py-2 text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap ${
-              mode === 'pyq'
+              activeHomeTab === 'notes'
                 ? 'bg-[#1E3A8A] text-white shadow-[0_4px_12px_-2px_rgba(30,58,138,0.4)]'
                 : 'text-slate-600 hover:bg-[#F4F6FB] hover:text-[#1E3A8A]'
             }`}
           >
-            PYQ Practice
+            Study Notes
           </button>
         </div>
       </div>
 
+      {activeHomeTab === 'notes' ? (
+        <StudyNotesSection />
+      ) : (
+        <>
       {/* Hero Brand Banner — Pure White Luxury Card with Golden Left Accent Bar & Glossy Trust Pills */}
       <section
         aria-label="SSC Sathi Brand Banner"
@@ -816,6 +815,8 @@ export function HomeDashboard({
           </div>
         )}
       </section>
+        </>
+      )}
 
       {/* Personal Attempted Tests Modal */}
       {isAttemptedModalOpen && (

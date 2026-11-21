@@ -235,7 +235,7 @@ export const SECTION_3_QUANT_S3: Question[] = [
       'Read the following frequency polygon which represents class interval (Living Area (Square Meters)) on the x-axis and frequency (Number of Units Sold) on the y-axis, and answer the following question:\n\nIf the median apartment size is defined as the interval containing the middle unit, which interval is the median class?',
     questionHi:
       'निम्नलिखित आवृत्ति बहुभुज का अध्ययन कीजिए, जो x-अक्ष पर वर्गांतराल (रहने की जगह (वर्ग मीटर)) तथा y-अक्ष पर आवृत्ति (बेची गई इकाइयों की संख्या) को दर्शाता है, और नीचे दिए गए प्रश्न का उत्तर दीजिए:\n\nयदि माध्यिका अपार्टमेंट आकार को उस वर्गांतराल के रूप में परिभाषित किया जाता है जिसमें मध्य इकाई आती है, तो माध्यिका वर्ग कौन-सा होगा?',
-    imageUrl: '/assets/mock30s3/q66_fig.png',
+    imageUrl: '/assets/mock30s3/q66_fig.svg',
     optionsEn: ['60–80 sq m', '100–120 sq m', '80–100 sq m', '120–140 sq m'],
     optionsHi: ['60–80 sq m', '100–120 sq m', '80–100 sq m', '120–140 sq m'],
     correctIndex: 2,
@@ -266,7 +266,7 @@ export const SECTION_3_QUANT_S3: Question[] = [
       'Study the given histogram that shows the height (in cm) of 100 students in an athletic team and answer the question that follows:\n\nIf 10 students from the 170–180 group shift to 150–160, which becomes the new modal class?',
     questionHi:
       'दिए गए हिस्टोग्राम का ध्यानपूर्वक अध्ययन कीजिए, जो एक एथलेटिक टीम के 100 छात्रों की ऊँचाई (सेमी में) दर्शाता है, और निम्नलिखित प्रश्न का उत्तर दीजिए:\n\nयदि 170–180 वर्ग के 10 छात्र 150–160 वर्ग में स्थानांतरित हो जाते हैं, तो नया बहुलक वर्ग (modal class) कौन-सा होगा?',
-    imageUrl: '/assets/mock30s3/q68_fig.png',
+    imageUrl: '/assets/mock30s3/q68_fig.svg',
     optionsEn: ['150-160', '160-170', '170-180', '180-190'],
     optionsHi: ['150-160', '160-170', '170-180', '180-190'],
     correctIndex: 3,
@@ -327,7 +327,7 @@ export const SECTION_3_QUANT_S3: Question[] = [
       'The following pie-chart presents the percentage distribution of different forest types within a specific geographical area. Analyze the data provided and answer the following question based on the chart.\n\nWhat is the total combined central angle (in degrees) formed at the center for the Tropical Evergreen and Alpine sectors?',
     questionHi:
       'निम्नलिखित वृत्त आरेख किसी विशिष्ट भौगोलिक क्षेत्र के भीतर विभिन्न प्रकार के वनों के प्रतिशत वितरण को प्रस्तुत करता है। दिए गए आँकड़ों का विश्लेषण कीजिए और आरेख के आधार पर निम्नलिखित प्रश्न का उत्तर दीजिए:\n\nउष्णकटिबंधीय सदाबहार (Tropical Evergreen) तथा अल्पाइन (Alpine) खंडों के लिए केंद्र पर निर्मित कुल केंद्रीय कोण (डिग्री में) कितना है?',
-    imageUrl: '/assets/mock30s3/q72_fig.png',
+    imageUrl: '/assets/mock30s3/q72_fig.svg',
     optionsEn: ['162°', '174°', '150°', '148°'],
     optionsHi: ['162°', '174°', '150°', '148°'],
     correctIndex: 0,
@@ -371,7 +371,7 @@ export const SECTION_3_QUANT_S3: Question[] = [
       'An automobile manufacturer tracks the production of Electric Vehicles (EVs) and Internal Combustion Engine (ICE) vehicles over three consecutive years. The relevant data is illustrated in the bar graph given below:\n\nIn which year did the production of EVs make up more than 35% of the total vehicle production (EV + ICE vehicles), and what is the percentage value rounded to two decimal places?',
     questionHi:
       'एक ऑटोमोबाइल निर्माता लगातार तीन वर्षों के दौरान इलेक्ट्रिक वाहनों (EVs) और आंतरिक दहन इंजन वाले वाहनों (ICE) के उत्पादन पर नज़र रखता है। संबंधित डेटा नीचे दिए गए बार ग्राफ में दर्शाया गया है:\n\nकिस वर्ष में इलेक्ट्रिक वाहनों (EVs) का उत्पादन कुल वाहन उत्पादन (EV + ICE वाहन) के 35 प्रतिशत से अधिक था, और दशमलव के दो स्थानों तक पूर्णांकित प्रतिशत मान क्या है?',
-    imageUrl: '/assets/mock30s3/q75_fig.png',
+    imageUrl: '/assets/mock30s3/q75_fig.svg',
     optionsEn: [
       '2024, 33.33%',
       '2025, 46.32%',

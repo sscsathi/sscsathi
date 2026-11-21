@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 370" width="640" height="370">
+  <rect width="640" height="370" fill="#FFFFFF" />
+
+  <!-- Title -->
+  <text x="342" y="34" fill="#111827" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" text-anchor="middle">Number of Students</text>
+
+  <!-- Gridlines (y = 0 to 35; top=64, bottom=288, height=224 => 6.4px per unit) -->
+  <g stroke="#9CA3AF" stroke-width="1">
+    <line x1="84" y1="64" x2="609" y2="64" />
+    <line x1="84" y1="96" x2="609" y2="96" />
+    <line x1="84" y1="128" x2="609" y2="128" />
+    <line x1="84" y1="160" x2="609" y2="160" />
+    <line x1="84" y1="192" x2="609" y2="192" />
+    <line x1="84" y1="224" x2="609" y2="224" />
+    <line x1="84" y1="256" x2="609" y2="256" />
+  </g>
+  <line x1="84" y1="288" x2="609" y2="288" stroke="#111827" stroke-width="1.6" />
+
+  <!-- Y-Axis Labels -->
+  <g fill="#1F2937" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="600" text-anchor="end">
+    <text x="72" y="69">35</text>
+    <text x="72" y="101">30</text>
+    <text x="72" y="133">25</text>
+    <text x="72" y="165">20</text>
+    <text x="72" y="197">15</text>
+    <text x="72" y="229">10</text>
+    <text x="72" y="261">5</text>
+    <text x="72" y="293">0</text>
+  </g>
+
+  <!-- Y-Axis Title -->
+  <text x="24" y="176" fill="#111827" font-family="Arial, Helvetica, sans-serif" font-size="13.5" font-weight="700" text-anchor="middle" transform="rotate(-90 24 176)">Frequency (Number of students)</text>
+
+  <!-- Histogram Bars (7 contiguous bars, width=75px each, starting at x=84) -->
+  <!-- Heights: 4->25.6, 8->51.2, 16->102.4, 30->192, 22->140.8, 14->89.6, 6->38.4 -->
+  <g fill="#374151" stroke="#FFFFFF" stroke-width="1.5">
+    <rect x="84" y="262.4" width="75" height="25.6" />
+    <rect x="159" y="236.8" width="75" height="51.2" />
+    <rect x="234" y="185.6" width="75" height="102.4" />
+    <rect x="309" y="96" width="75" height="192" />
+    <rect x="384" y="147.2" width="75" height="140.8" />
+    <rect x="459" y="198.4" width="75" height="89.6" />
+    <rect x="534" y="249.6" width="75" height="38.4" />
+  </g>
+
+  <!-- Value Labels -->
+  <g fill="#111827" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle">
+    <text x="121.5" y="253">4</text>
+    <text x="196.5" y="227">8</text>
+    <text x="271.5" y="176">16</text>
+    <text x="346.5" y="86">30</text>
+    <text x="421.5" y="138">22</text>
+    <text x="496.5" y="189">14</text>
+    <text x="571.5" y="240">6</text>
+  </g>
+
+  <!-- X-Axis Labels -->
+  <g fill="#1F2937" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="600" text-anchor="middle">
+    <text x="121.5" y="311">140–150</text>
+    <text x="196.5" y="311">150–160</text>
+    <text x="271.5" y="311">160–170</text>
+    <text x="346.5" y="311">170–180</text>
+    <text x="421.5" y="311">180–190</text>
+    <text x="496.5" y="311">190–200</text>
+    <text x="571.5" y="311">200–210</text>
+  </g>
+
+  <!-- X-Axis Title -->
+  <text x="346.5" y="346" fill="#111827" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle">Height (in cm)</text>
+</svg>

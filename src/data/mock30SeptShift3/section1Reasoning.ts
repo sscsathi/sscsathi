@@ -244,7 +244,7 @@ export const SECTION_1_REASONING_S3: Question[] = [
       'If a mirror is placed on the line PQ, which figure will be the mirror image of the question figure?',
     questionHi:
       'यदि दर्पण को रेखा PQ पर रखा जाता है, तो प्रश्न आकृति का दर्पण प्रतिबिंब कौन सी आकृति होगी?',
-    imageUrl: '/assets/mock30s3/q13_fig.png',
+    imageUrl: '/assets/mock30s3/q13_fig.svg',
     optionsEn: ['Figure A', 'Figure B', 'Figure C', 'Figure D'],
     optionsHi: ['आकृति A', 'आकृति B', 'आकृति C', 'आकृति D'],
     optionImages: [

@@ -766,7 +766,7 @@ export function ResultScreen({
                             <img
                               src={q.imageUrl}
                               alt="Question diagram"
-                              className="max-h-60 w-auto max-w-full object-contain"
+                              className="max-h-60 w-auto max-w-full object-contain grayscale contrast-[1.45] brightness-[1.12] mix-blend-multiply"
                             />
                           </div>
                         )}
@@ -829,7 +829,7 @@ export function ResultScreen({
                                       <img
                                         src={optImg}
                                         alt={`Option ${letter}`}
-                                        className="max-h-20 w-auto max-w-full object-contain"
+                                        className="max-h-20 w-auto max-w-full object-contain grayscale contrast-[1.45] brightness-[1.12] mix-blend-multiply"
                                       />
                                     </div>
                                   ) : (

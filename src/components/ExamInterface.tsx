@@ -930,7 +930,7 @@ export function ExamInterface({
                   <img
                     src={currentQuestion.imageUrl}
                     alt="Question diagram"
-                    className="max-h-36 sm:max-h-56 w-auto max-w-full object-contain"
+                    className="max-h-36 sm:max-h-56 w-auto max-w-full object-contain grayscale contrast-[1.45] brightness-[1.12] mix-blend-multiply"
                   />
                 </div>
               )}
@@ -1009,7 +1009,7 @@ export function ExamInterface({
                             <img
                               src={optImg}
                               alt={`Option ${letter}`}
-                              className="max-h-14 sm:max-h-20 w-auto max-w-full object-contain"
+                              className="max-h-14 sm:max-h-20 w-auto max-w-full object-contain grayscale contrast-[1.45] brightness-[1.12] mix-blend-multiply"
                             />
                           </div>
                         ) : (

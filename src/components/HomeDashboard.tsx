@@ -762,14 +762,6 @@ export function HomeDashboard({
                             <span className="font-bold text-emerald-700">EN / HI</span>
                           </>
                         )}
-                        {test.strictSectionTiming && test.sections && (
-                          <>
-                            <span aria-hidden="true">·</span>
-                            <span className="font-bold text-[#1E3A8A]">
-                              {test.sections.length} × 15m Sectional Timer
-                            </span>
-                          </>
-                        )}
                       </div>
 
                       {test.isCustom && (
@@ -862,12 +854,7 @@ export function HomeDashboard({
                       </div>
                     </div>
                   ) : (
-                    <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-                      <span className="inline-flex items-center gap-1.5 text-xs text-slate-500">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" aria-hidden="true" />
-                        <span>Detailed Solutions</span>
-                      </span>
-
+                    <div className="mt-4 flex flex-wrap items-center justify-end gap-3">
                       <button
                         type="button"
                         onClick={() => onStartTest(test)}

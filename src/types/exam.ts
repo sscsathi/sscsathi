@@ -16,8 +16,10 @@ export interface Question {
   questionHi?: string;
   passageEn?: string;
   matrix?: string[][];
+  imageUrl?: string;
   optionsEn: [string, string, string, string];
   optionsHi?: [string, string, string, string];
+  optionImages?: [string, string, string, string];
   correctIndex: OptionIndex;
   explanationEn: string;
   explanationHi?: string;

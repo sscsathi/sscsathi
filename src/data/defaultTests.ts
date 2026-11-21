@@ -1,7 +1,9 @@
 import { MockTest } from '../types/exam';
 import { FULL_MOCK_30_SEPT_SHIFT2 } from './mock30SeptShift2';
+import { FULL_MOCK_30_SEPT_SHIFT3 } from './mock30SeptShift3';
 
 export const DEFAULT_MOCK_TESTS: MockTest[] = [
+  FULL_MOCK_30_SEPT_SHIFT3,
   FULL_MOCK_30_SEPT_SHIFT2,
   {
     id: 'ssc-cgl-30-sept-shift2-math-2026-pyq-1',

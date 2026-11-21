@@ -761,8 +761,18 @@ export function ResultScreen({
                           {solutionLang === 'hi' && q.questionHi ? q.questionHi : q.questionEn}
                         </h3>
 
+                        {q.imageUrl && (
+                          <div className="mt-3 flex justify-center rounded-xl border border-slate-200 bg-white p-2.5">
+                            <img
+                              src={q.imageUrl}
+                              alt="Question diagram"
+                              className="max-h-60 w-auto max-w-full object-contain"
+                            />
+                          </div>
+                        )}
+
                         {q.matrix && q.matrix.length > 0 && (
-                          <div className="mt-3 inline-block overflow-hidden rounded-xl border border-slate-300 bg-[#F8FAFC]">
+                          <div className="mt-3 inline-block max-w-full overflow-x-auto rounded-xl border border-slate-300 bg-[#F8FAFC]">
                             <table className="border-collapse text-center font-mono text-xs sm:text-sm font-bold text-[#0F172A] tabular-nums">
                               <tbody>
                                 {q.matrix.map((row, rIdx) => (
@@ -773,7 +783,7 @@ export function ResultScreen({
                                     {row.map((cell, cIdx) => (
                                       <td
                                         key={cIdx}
-                                        className={`h-9 w-12 px-2 ${
+                                        className={`h-9 min-w-[2.75rem] px-2 ${
                                           cell === '?' ? 'bg-amber-100/80 text-[#1E3A8A]' : 'bg-white'
                                         }`}
                                       >
@@ -796,6 +806,7 @@ export function ResultScreen({
                               solutionLang === 'hi' && q.optionsHi
                                 ? q.optionsHi[optionIdx]
                                 : q.optionsEn[optionIdx];
+                            const optImg = q.optionImages?.[optionIdx];
 
                             let boxClass = 'border-slate-200 bg-slate-50/50 text-slate-700';
                             if (isRightOpt) {
@@ -809,11 +820,21 @@ export function ResultScreen({
                                 key={letter}
                                 className={`flex items-start justify-between gap-2 rounded-xl border p-3 text-sm ${boxClass}`}
                               >
-                                <div className="flex items-start gap-2.5">
+                                <div className="flex min-w-0 flex-1 items-start gap-2.5">
                                   <span className="mt-0.5 font-mono text-xs font-bold">
                                     {letter}.
                                   </span>
-                                  <span className="font-medium">{optText}</span>
+                                  {optImg ? (
+                                    <div className="rounded-md bg-white p-1">
+                                      <img
+                                        src={optImg}
+                                        alt={`Option ${letter}`}
+                                        className="max-h-20 w-auto max-w-full object-contain"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <span className="font-medium">{optText}</span>
+                                  )}
                                 </div>
 
                                 <div className="shrink-0 text-[11px] font-semibold">

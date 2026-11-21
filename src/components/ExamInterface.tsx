@@ -924,9 +924,20 @@ export function ExamInterface({
                 {displayedQuestionText}
               </h2>
 
-              {/* Structured Number Matrix (e.g., Q15) */}
+              {/* Question Diagram / Chart / Figure Image */}
+              {currentQuestion.imageUrl && (
+                <div className="mt-2 flex justify-center rounded-lg border border-slate-200 bg-white p-1.5 sm:p-2">
+                  <img
+                    src={currentQuestion.imageUrl}
+                    alt="Question diagram"
+                    className="max-h-36 sm:max-h-56 w-auto max-w-full object-contain"
+                  />
+                </div>
+              )}
+
+              {/* Structured Number Matrix (e.g., Q15 / Q22) */}
               {currentQuestion.matrix && currentQuestion.matrix.length > 0 && (
-                <div className="mt-2.5 inline-block overflow-hidden rounded-lg border border-slate-300 bg-[#F8FAFC] shadow-2xs">
+                <div className="mt-2.5 inline-block max-w-full overflow-x-auto rounded-lg border border-slate-300 bg-[#F8FAFC] shadow-2xs">
                   <table className="border-collapse text-center font-mono text-xs sm:text-sm font-bold text-[#0F172A] tabular-nums">
                     <tbody>
                       {currentQuestion.matrix.map((row, rIdx) => (
@@ -937,7 +948,7 @@ export function ExamInterface({
                           {row.map((cell, cIdx) => (
                             <td
                               key={cIdx}
-                              className={`h-8 w-12 sm:h-10 sm:w-14 px-2 ${
+                              className={`h-7 sm:h-9 min-w-[2.5rem] sm:min-w-[3.25rem] px-1.5 sm:px-2 ${
                                 cell === '?' ? 'bg-amber-100/80 text-[#1E3A8A]' : 'bg-white'
                               }`}
                             >
@@ -951,12 +962,21 @@ export function ExamInterface({
                 </div>
               )}
 
-              {/* Compact 4 Option Selection Cards */}
-              <div className="mt-2.5 sm:mt-4 space-y-1.5 sm:space-y-2.5" role="radiogroup" aria-label="Answer options">
+              {/* Compact 4 Option Selection Cards (2x2 grid for figure options, vertical stack for text options) */}
+              <div
+                className={
+                  currentQuestion.optionImages
+                    ? 'mt-2.5 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-2.5'
+                    : 'mt-2.5 sm:mt-4 space-y-1.5 sm:space-y-2.5'
+                }
+                role="radiogroup"
+                aria-label="Answer options"
+              >
                 {OPTION_LETTERS.map((letter, idx) => {
                   const optionIdx = idx as OptionIndex;
                   const isSelected = currentResponse?.selectedIndex === optionIdx;
                   const optText = displayedOptions[optionIdx];
+                  const optImg = currentQuestion.optionImages?.[optionIdx];
 
                   return (
                     <button
@@ -965,13 +985,15 @@ export function ExamInterface({
                       role="radio"
                       aria-checked={isSelected}
                       onClick={() => handleSelectOption(optionIdx)}
-                      className={`group flex w-full min-h-[42px] sm:min-h-[50px] items-center justify-between gap-2.5 rounded-xl border px-2.5 py-2 sm:px-4 sm:py-3 text-left transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F172A] ${
+                      className={`group flex w-full ${
+                        optImg ? 'min-h-[68px] sm:min-h-[82px]' : 'min-h-[42px] sm:min-h-[50px]'
+                      } items-center justify-between gap-2 rounded-xl border px-2.5 py-2 sm:px-4 sm:py-3 text-left transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F172A] ${
                         isSelected
                           ? 'border-[#0F172A] bg-amber-50/85 text-[#0F172A] ring-1 ring-[#0F172A] shadow-xs'
                           : 'border-slate-200 bg-white text-slate-800 hover:border-slate-300 hover:bg-slate-50/80'
                       }`}
                     >
-                      <div className="flex items-center gap-2.5 sm:gap-3">
+                      <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
                         <span
                           className={`flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg font-mono text-xs font-bold transition-colors ${
                             isSelected
@@ -982,13 +1004,23 @@ export function ExamInterface({
                           {letter}
                         </span>
 
-                        <span
-                          className={`text-[13px] sm:text-sm leading-snug ${
-                            isSelected ? 'font-bold text-[#0F172A]' : 'font-medium'
-                          }`}
-                        >
-                          {optText}
-                        </span>
+                        {optImg ? (
+                          <div className="flex min-w-0 flex-1 items-center justify-center rounded-md bg-white p-1">
+                            <img
+                              src={optImg}
+                              alt={`Option ${letter}`}
+                              className="max-h-14 sm:max-h-20 w-auto max-w-full object-contain"
+                            />
+                          </div>
+                        ) : (
+                          <span
+                            className={`text-[13px] sm:text-sm leading-snug ${
+                              isSelected ? 'font-bold text-[#0F172A]' : 'font-medium'
+                            }`}
+                          >
+                            {optText}
+                          </span>
+                        )}
                       </div>
 
                       {isSelected && (

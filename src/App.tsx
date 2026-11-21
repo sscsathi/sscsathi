@@ -9,6 +9,7 @@ import { Navbar } from './components/Navbar';
 import { QuestionBuilderPanel } from './components/QuestionBuilderPanel';
 import { ResultScreen } from './components/ResultScreen';
 import { SplashScreen } from './components/SplashScreen';
+import { TestInstructionsScreen } from './components/TestInstructionsScreen';
 import { DEFAULT_MOCK_TESTS } from './data/defaultTests';
 import {
   auth,
@@ -22,7 +23,7 @@ import {
   saveUserAttemptToCloud,
   updateUserProfileFields,
 } from './services/userSync';
-import { ExamResult, MockTest, Question } from './types/exam';
+import { ExamResult, MockTest, Question, QuestionLanguage } from './types/exam';
 import {
   cacheResultsHistory,
   loadAddedQuestionsMap,
@@ -33,7 +34,7 @@ import {
   saveResultToHistory,
 } from './utils/storage';
 
-type AppView = 'home' | 'exam' | 'result' | 'builder';
+type AppView = 'home' | 'instructions' | 'exam' | 'result' | 'builder';
 
 const BUILDER_PIN = '6376';
 const SPLASH_SESSION_KEY = 'ssc_sathi_splash_seen_v2';
@@ -97,6 +98,9 @@ export default function App() {
   const [activeHomeTab, setActiveHomeTab] = useState<HomeTopTab>('mocks');
   const [activeSeriesFilter, setActiveSeriesFilter] = useState<PracticeSeriesFilter>('all');
   const [activeTestId, setActiveTestId] = useState<string | null>(null);
+  const [selectedExamLanguage, setSelectedExamLanguage] = useState<QuestionLanguage>('en');
+  const [examSessionKey, setExamSessionKey] = useState<number>(0);
+  const [instructionsReturnView, setInstructionsReturnView] = useState<'home' | 'result'>('home');
   const [activeResult, setActiveResult] = useState<ExamResult | null>(null);
   const [resultInitialTab, setResultInitialTab] = useState<'scorecard' | 'solutions'>('scorecard');
   const [resultSessionKey, setResultSessionKey] = useState<number>(0);
@@ -317,8 +321,19 @@ export default function App() {
     });
   }, [user, userScope]);
 
-  const handleStartTest = useCallback((test: MockTest) => {
-    setActiveTestId(test.id);
+  const handleStartTest = useCallback(
+    (test: MockTest) => {
+      setActiveTestId(test.id);
+      setInstructionsReturnView(view === 'result' ? 'result' : 'home');
+      setView('instructions');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    [view]
+  );
+
+  const handleConfirmStartExam = useCallback((language: QuestionLanguage) => {
+    setSelectedExamLanguage(language);
+    setExamSessionKey((k) => k + 1);
     setView('exam');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
@@ -408,10 +423,26 @@ export default function App() {
     }
   };
 
+  if (view === 'instructions' && activeTest) {
+    return (
+      <TestInstructionsScreen
+        key={activeTest.id}
+        test={activeTest}
+        onBack={() => {
+          setView(instructionsReturnView === 'result' && activeResult ? 'result' : 'home');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+        onConfirmStart={handleConfirmStartExam}
+      />
+    );
+  }
+
   if (view === 'exam' && activeTest) {
     return (
       <ExamInterface
+        key={`${activeTest.id}-${examSessionKey}`}
         test={activeTest}
+        initialLanguage={selectedExamLanguage}
         onFinishTest={handleFinishTest}
         onExitTest={() => setView('home')}
       />

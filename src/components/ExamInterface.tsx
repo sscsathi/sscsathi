@@ -27,6 +27,7 @@ import { calculateExamResult, formatTimer } from '../utils/scoring';
 
 interface ExamInterfaceProps {
   test: MockTest;
+  initialLanguage?: QuestionLanguage;
   onFinishTest: (result: ExamResult) => void;
   onExitTest: () => void;
 }
@@ -35,6 +36,7 @@ const OPTION_LETTERS = ['A', 'B', 'C', 'D'] as const;
 
 export function ExamInterface({
   test,
+  initialLanguage = 'en',
   onFinishTest,
   onExitTest,
 }: ExamInterfaceProps) {
@@ -59,7 +61,7 @@ export function ExamInterface({
   const [isMobilePaletteOpen, setIsMobilePaletteOpen] = useState<boolean>(false);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState<boolean>(false);
   const [isExitModalOpen, setIsExitModalOpen] = useState<boolean>(false);
-  const [language, setLanguage] = useState<QuestionLanguage>('en');
+  const [language, setLanguage] = useState<QuestionLanguage>(initialLanguage);
 
   // Guard against double-triggering section transition or test submission on 0s
   const zeroHandledForSectionRef = useRef<number>(-1);

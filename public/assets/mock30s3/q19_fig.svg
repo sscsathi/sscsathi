@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 176" width="680" height="176">
+  <rect width="680" height="176" fill="#FFFFFF" />
+
+  <!-- Cube 1: Top = 1, Left = 3, Right = 5 -->
+  <g transform="translate(86, 88)">
+    <polygon points="0,-62 54,-31 0,0 -54,-31" fill="#FFFFFF" stroke="#000000" stroke-width="2.6" stroke-linejoin="round" />
+    <polygon points="-54,-31 0,0 0,62 -54,31" fill="#FFFFFF" stroke="#000000" stroke-width="2.6" stroke-linejoin="round" />
+    <polygon points="0,0 54,-31 54,31 0,62" fill="#FFFFFF" stroke="#000000" stroke-width="2.6" stroke-linejoin="round" />
+    <g fill="#000000" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="27" text-anchor="middle" dominant-baseline="central">
+      <text x="0" y="-31">1</text>
+      <text x="-27" y="16">3</text>
+      <text x="27" y="16">5</text>
+    </g>
+  </g>
+
+  <!-- Cube 2: Top = 2, Left = 5, Right = 3 -->
+  <g transform="translate(255, 88)">
+    <polygon points="0,-62 54,-31 0,0 -54,-31" fill="#FFFFFF" stroke="#000000" stroke-width="2.6" stroke-linejoin="round" />
+    <polygon points="-54,-31 0,0 0,62 -54,31" fill="#FFFFFF" stroke="#000000" stroke-width="2.6" stroke-linejoin="round" />
+    <polygon points="0,0 54,-31 54,31 0,62" fill="#FFFFFF" stroke="#000000" stroke-width="2.6" stroke-linejoin="round" />
+    <g fill="#000000" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="27" text-anchor="middle" dominant-baseline="central">
+      <text x="0" y="-31">2</text>
+      <text x="-27" y="16">5</text>
+      <text x="27" y="16">3</text>
+    </g>
+  </g>
+
+  <!-- Cube 3: Top = 4, Left = 3, Right = 1 -->
+  <g transform="translate(425, 88)">
+    <polygon points="0,-62 54,-31 0,0 -54,-31" fill="#FFFFFF" stroke="#000000" stroke-width="2.6" stroke-linejoin="round" />
+    <polygon points="-54,-31 0,0 0,62 -54,31" fill="#FFFFFF" stroke="#000000" stroke-width="2.6" stroke-linejoin="round" />
+    <polygon points="0,0 54,-31 54,31 0,62" fill="#FFFFFF" stroke="#000000" stroke-width="2.6" stroke-linejoin="round" />
+    <g fill="#000000" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="27" text-anchor="middle" dominant-baseline="central">
+      <text x="0" y="-31">4</text>
+      <text x="-27" y="16">3</text>
+      <text x="27" y="16">1</text>
+    </g>
+  </g>
+
+  <!-- Cube 4: Top = 3, Left = 4, Right = 2 -->
+  <g transform="translate(594, 88)">
+    <polygon points="0,-62 54,-31 0,0 -54,-31" fill="#FFFFFF" stroke="#000000" stroke-width="2.6" stroke-linejoin="round" />
+    <polygon points="-54,-31 0,0 0,62 -54,31" fill="#FFFFFF" stroke="#000000" stroke-width="2.6" stroke-linejoin="round" />
+    <polygon points="0,0 54,-31 54,31 0,62" fill="#FFFFFF" stroke="#000000" stroke-width="2.6" stroke-linejoin="round" />
+    <g fill="#000000" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="27" text-anchor="middle" dominant-baseline="central">
+      <text x="0" y="-31">3</text>
+      <text x="-27" y="16">4</text>
+      <text x="27" y="16">2</text>
+    </g>
+  </g>
+</svg>

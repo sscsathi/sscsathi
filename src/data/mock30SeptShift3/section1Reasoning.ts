@@ -248,10 +248,10 @@ export const SECTION_1_REASONING_S3: Question[] = [
     optionsEn: ['Figure A', 'Figure B', 'Figure C', 'Figure D'],
     optionsHi: ['आकृति A', 'आकृति B', 'आकृति C', 'आकृति D'],
     optionImages: [
-      '/assets/mock30s3/q13_a.png',
-      '/assets/mock30s3/q13_b.png',
-      '/assets/mock30s3/q13_c.png',
-      '/assets/mock30s3/q13_d.png',
+      '/assets/mock30s3/q13_a.svg',
+      '/assets/mock30s3/q13_b.svg',
+      '/assets/mock30s3/q13_c.svg',
+      '/assets/mock30s3/q13_d.svg',
     ],
     correctIndex: 1,
     explanationEn:
@@ -369,7 +369,7 @@ export const SECTION_1_REASONING_S3: Question[] = [
       "Four different positions of the same dice are shown. Select the number that will be on the face opposite to the one showing '4'.",
     questionHi:
       "एक ही पासे की चार अलग-अलग स्थितियाँ दिखाई गई हैं। '4' अंक वाले भाग के विपरीत आने वाली संख्या का चयन कीजिए।",
-    imageUrl: '/assets/mock30s3/q19_fig.png',
+    imageUrl: '/assets/mock30s3/q19_fig.svg',
     optionsEn: ['5', '6', '1', '3'],
     optionsHi: ['5', '6', '1', '3'],
     correctIndex: 0,

@@ -60,7 +60,7 @@ export function ExamInterface({
   const [sectionNotice, setSectionNotice] = useState<string | null>(null);
   const [isDesktopPaletteOpen, setIsDesktopPaletteOpen] = useState<boolean>(true);
   const [isMobilePaletteOpen, setIsMobilePaletteOpen] = useState<boolean>(false);
-  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState<boolean>(false);
+  const [submitModalMode, setSubmitModalMode] = useState<'none' | 'section' | 'full'>('none');
   const [isExitModalOpen, setIsExitModalOpen] = useState<boolean>(false);
   const [language, setLanguage] = useState<QuestionLanguage>(initialLanguage);
   const [swipeOffset, setSwipeOffset] = useState<number>(0);
@@ -128,7 +128,7 @@ export function ExamInterface({
       setActiveSectionIndex(nextIdx);
       setSecondsLeft(nextSection.durationMinutes * 60);
       setCurrentIndex(nextSection.startIndex);
-      setIsSubmitModalOpen(false);
+      setSubmitModalMode('none');
       setIsMobilePaletteOpen(false);
 
       const firstNextQ = test.questions[nextSection.startIndex];
@@ -309,7 +309,7 @@ export function ExamInterface({
   const handleQuestionTouchStart = (e: TouchEvent<HTMLDivElement>) => {
     if (
       e.touches.length !== 1 ||
-      isSubmitModalOpen ||
+      submitModalMode !== 'none' ||
       isExitModalOpen ||
       isMobilePaletteOpen
     ) {
@@ -387,7 +387,7 @@ export function ExamInterface({
 
   // Keyboard shortcuts for quick CBT navigation (strictly respects section bounds)
   useEffect(() => {
-    if (isSubmitModalOpen || isExitModalOpen) return;
+    if (submitModalMode !== 'none' || isExitModalOpen) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.key === '1' || e.key.toLowerCase() === 'a') handleSelectOption(0);
@@ -405,10 +405,10 @@ export function ExamInterface({
     handleSaveAndNext,
     handleSelectOption,
     isExitModalOpen,
-    isSubmitModalOpen,
     jumpToQuestion,
     sectionEndIndex,
     sectionStartIndex,
+    submitModalMode,
   ]);
 
   const activeScopeQuestions = useMemo(
@@ -451,6 +451,87 @@ export function ExamInterface({
     [activeScopeQuestions, responses]
   );
 
+  // Clean display names for section pills (without Q-ranges) and Exam Summary rows
+  const getSectionPillLabel = (shortName: string, fullName: string) => {
+    if (shortName === 'Quant' || fullName.toLowerCase().includes('quantitative')) {
+      return 'Quantitative Aptitude';
+    }
+    return shortName;
+  };
+
+  const getSummaryShortName = (shortName: string, fullName: string) => {
+    if (shortName === 'General Awareness' || fullName.toLowerCase().includes('awareness')) {
+      return 'GK';
+    }
+    if (shortName === 'Quant' || fullName.toLowerCase().includes('quantitative')) {
+      return 'Math';
+    }
+    return shortName;
+  };
+
+  // Section-wise summary breakdown for the Exam Summary modal
+  const examSummaryRows = useMemo(() => {
+    const groups =
+      sections.length > 0
+        ? sections.map((sec, idx) => ({
+            id: sec.id,
+            index: idx,
+            label: getSummaryShortName(sec.shortName, sec.name),
+            fullLabel: getSectionPillLabel(sec.shortName, sec.name),
+            questions: test.questions.slice(sec.startIndex, sec.endIndex + 1),
+          }))
+        : [
+            {
+              id: 'single-section',
+              index: 0,
+              label: test.category,
+              fullLabel: test.category,
+              questions: test.questions,
+            },
+          ];
+
+    return groups.map((g) => {
+      let attempted = 0;
+      let unattempted = 0;
+      let marked = 0;
+      for (const q of g.questions) {
+        const resp = responses[q.id];
+        if (resp?.selectedIndex !== null && resp?.selectedIndex !== undefined) {
+          attempted += 1;
+        } else {
+          unattempted += 1;
+        }
+        if (resp?.status === 'marked' || resp?.status === 'answered-marked') {
+          marked += 1;
+        }
+      }
+      return {
+        ...g,
+        total: g.questions.length,
+        attempted,
+        unattempted,
+        marked,
+      };
+    });
+  }, [responses, sections, test.category, test.questions]);
+
+  const examSummaryTotals = useMemo(
+    () =>
+      examSummaryRows.reduce(
+        (acc, r) => ({
+          attempted: acc.attempted + r.attempted,
+          unattempted: acc.unattempted + r.unattempted,
+          marked: acc.marked + r.marked,
+          total: acc.total + r.total,
+        }),
+        { attempted: 0, unattempted: 0, marked: 0, total: 0 }
+      ),
+    [examSummaryRows]
+  );
+
+  const localQuestionNumber = currentIndex - sectionStartIndex + 1;
+  const sectionQuestionTotal = activeScopeQuestions.length;
+
   const isTimerLow = secondsLeft < 120;
   const nextSection =
     isStrictSectional && !isLastSection ? sections[activeSectionIndex + 1] : undefined;
@@ -460,13 +541,12 @@ export function ExamInterface({
       <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-3">
         <div className="min-w-0">
           <h2 className="truncate text-sm font-bold text-[#0F172A]">
-            {activeSection ? activeSection.shortName : 'Question Palette'}
+            {activeSection
+              ? getSectionPillLabel(activeSection.shortName, activeSection.name)
+              : 'Question Palette'}
           </h2>
           <p className="text-xs text-slate-500 tabular-nums">
-            {sectionAttemptedCount} of {activeScopeQuestions.length} answered
-            {activeSection
-              ? ` (Q${activeSection.startIndex + 1}–Q${activeSection.endIndex + 1})`
-              : ''}
+            {sectionAttemptedCount} of {sectionQuestionTotal} answered
           </p>
         </div>
         <button
@@ -534,7 +614,7 @@ export function ExamInterface({
         </div>
       </div>
 
-      {/* Numbered Grid (Strictly scoped to current section; displays global Q1..Q100 numbering) */}
+      {/* Numbered Grid — Independent 1 to 25 per section */}
       <div className="min-h-0 flex-1 overflow-y-auto p-3.5">
         <div className="grid grid-cols-5 gap-2">
           {activeScopeQuestions.map((q, localIdx) => {
@@ -542,18 +622,19 @@ export function ExamInterface({
             const st = responses[q.id]?.status ?? 'not-visited';
             const visualState = toPaletteVisualState(st);
             const isCurrent = globalIdx === currentIndex;
+            const displayNum = localIdx + 1;
             return (
               <button
                 key={q.id}
                 type="button"
                 onClick={() => jumpToQuestion(globalIdx)}
-                aria-label={`Question ${globalIdx + 1}, status ${visualState}`}
+                aria-label={`Question ${displayNum}, status ${visualState}`}
                 aria-current={isCurrent ? 'step' : undefined}
-                className="flex w-full items-start justify-center rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F172A]"
+                className="flex w-full items-start justify-center rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1E1B4B]"
               >
                 <PaletteSymbol
                   state={visualState}
-                  label={globalIdx + 1}
+                  label={displayNum}
                   size="grid"
                   isCurrent={isCurrent}
                   reserveTriangleSpace
@@ -564,30 +645,44 @@ export function ExamInterface({
         </div>
       </div>
 
-      <div className="shrink-0 border-t border-slate-200 p-3.5">
+      {/* Palette Footer: Dedicated Next Section + Full Submit Test buttons */}
+      <div className="shrink-0 space-y-2 border-t border-slate-200 p-3.5">
+        {isStrictSectional && !isLastSection && (
+          <button
+            type="button"
+            onClick={() => {
+              setIsMobilePaletteOpen(false);
+              setSubmitModalMode('section');
+            }}
+            className="w-full min-h-[40px] rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-xs font-bold text-[#1E1B4B] transition-colors hover:bg-indigo-100"
+          >
+            Next Section →
+          </button>
+        )}
         <button
           type="button"
-          onClick={() => setIsSubmitModalOpen(true)}
-          className="w-full min-h-[42px] rounded-xl bg-[#F59E0B] px-4 py-2 text-sm font-bold text-[#0F172A] transition-colors hover:bg-amber-400"
+          onClick={() => {
+            setIsMobilePaletteOpen(false);
+            setSubmitModalMode('full');
+          }}
+          className="w-full min-h-[42px] rounded-xl bg-gradient-to-r from-[#1E1B4B] via-[#252262] to-[#312E81] px-4 py-2 text-sm font-bold text-white shadow-xs transition-opacity hover:opacity-95"
         >
-          {isStrictSectional && !isLastSection ? 'Submit Section →' : 'Submit Test'}
+          Submit Test
         </button>
       </div>
     </div>
   );
 
-  const modalCounts = isStrictSectional && !isLastSection ? sectionStatusCounts : overallStatusCounts;
-
   return (
     <div className="flex h-[100dvh] flex-col overflow-hidden bg-[#F8FAFC]">
-      {/* Royal Navy CBT Top Bar */}
-      <header className="shrink-0 z-30 border-b border-slate-800 bg-[#0F172A] text-white shadow-xs">
-        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-2 px-2.5 py-1.5 sm:gap-3 sm:px-6 sm:py-2">
-          <div className="flex min-w-0 items-center gap-2">
+      {/* Modern Deep Indigo-Slate / Royal Sapphire Gradient Top Header */}
+      <header className="shrink-0 z-30 border-b border-indigo-400/20 bg-gradient-to-r from-[#1E1B4B] via-[#252262] to-[#312E81] text-white shadow-sm">
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-1.5 px-2.5 py-1.5 sm:gap-3 sm:px-6 sm:py-2">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
             <button
               type="button"
               onClick={() => setIsExitModalOpen(true)}
-              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-700 bg-slate-800/80 text-slate-200 hover:bg-slate-700 hover:text-white sm:h-9 sm:w-9"
+              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white/10 text-white backdrop-blur-xs transition-colors hover:bg-white/20 sm:h-9 sm:w-9"
               aria-label="Exit exam"
               title="Exit exam"
             >
@@ -596,13 +691,13 @@ export function ExamInterface({
             <img
               src="/assets/aistudio/1795032296907_b1ef824a.png"
               alt="SSC Sathi logo"
-              className="hidden h-7 w-7 shrink-0 rounded-full bg-white object-cover ring-1 ring-amber-400/40 sm:block"
+              className="hidden h-7 w-7 shrink-0 rounded-full bg-white object-cover ring-1 ring-white/30 sm:block"
             />
             <div className="min-w-0">
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-[#F59E0B] leading-tight">
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-amber-300 leading-tight">
                 {isStrictSectional
                   ? `SSC Sathi · Sec ${activeSectionIndex + 1}/${sections.length}`
-                  : 'SSC Sathi · CBT Mode'}
+                  : 'SSC Sathi · CBT'}
               </div>
               <h1 className="truncate text-xs sm:text-sm font-bold text-white leading-tight">
                 {test.title}
@@ -610,22 +705,22 @@ export function ExamInterface({
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-            {/* Bold Section/Test Countdown Timer */}
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            {/* Glassmorphic Countdown Timer */}
             <div
               role="timer"
               aria-live="off"
-              className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 sm:px-3 sm:py-1.5 font-mono text-xs sm:text-sm font-extrabold tabular-nums transition-colors ${
+              className={`inline-flex shrink-0 items-center gap-1 rounded-lg border px-2 py-1 sm:px-2.5 sm:py-1.5 font-mono text-[11px] sm:text-sm font-extrabold tabular-nums backdrop-blur-xs transition-colors ${
                 isTimerLow
-                  ? 'animate-pulse border-rose-400 bg-rose-600/25 text-rose-200 shadow-xs shadow-rose-500/25'
-                  : 'border-amber-400/35 bg-slate-800 text-[#F59E0B]'
+                  ? 'animate-pulse border-rose-300/70 bg-rose-500/30 text-rose-100'
+                  : 'border-white/20 bg-white/12 text-amber-300'
               }`}
             >
               <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <span>{formatTimer(secondsLeft)}</span>
             </div>
 
-            {/* Palette Toggle Button */}
+            {/* Glassmorphic Palette Toggle */}
             <button
               type="button"
               onClick={() => {
@@ -636,35 +731,48 @@ export function ExamInterface({
                 }
               }}
               aria-label="Toggle Question Palette"
-              className="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-700 bg-slate-800 px-2 text-xs font-semibold text-slate-200 hover:bg-slate-700 hover:text-white sm:h-9 sm:px-2.5"
+              className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-white/15 bg-white/10 px-2 text-xs font-semibold text-white backdrop-blur-xs transition-colors hover:bg-white/20 sm:h-9 sm:px-2.5"
             >
-              <LayoutGrid className="h-4 w-4 text-[#F59E0B] lg:hidden" aria-hidden="true" />
+              <LayoutGrid className="h-4 w-4 text-amber-300 lg:hidden" aria-hidden="true" />
               {isDesktopPaletteOpen ? (
-                <PanelRightClose className="hidden h-4 w-4 text-[#F59E0B] lg:block" aria-hidden="true" />
+                <PanelRightClose className="hidden h-4 w-4 text-amber-300 lg:block" aria-hidden="true" />
               ) : (
-                <PanelRightOpen className="hidden h-4 w-4 text-[#F59E0B] lg:block" aria-hidden="true" />
+                <PanelRightOpen className="hidden h-4 w-4 text-amber-300 lg:block" aria-hidden="true" />
               )}
-              <span className="hidden sm:inline">Palette</span>
+              <span className="hidden md:inline">Palette</span>
             </button>
 
+            {/* Clean Next Sec Button (when on Sections 1-3) */}
+            {isStrictSectional && !isLastSection && (
+              <button
+                type="button"
+                onClick={() => setSubmitModalMode('section')}
+                className="inline-flex h-8 shrink-0 items-center justify-center rounded-lg border border-white/25 bg-white/12 px-2 sm:h-9 sm:px-3 text-[11px] sm:text-xs font-bold text-white backdrop-blur-xs transition-colors hover:bg-white/20 whitespace-nowrap"
+              >
+                Next Sec
+              </button>
+            )}
+
+            {/* Dedicated Full-Test Submit Button — Never Truncated */}
             <button
               type="button"
-              onClick={() => setIsSubmitModalOpen(true)}
-              className="inline-flex h-8 items-center justify-center rounded-lg bg-[#F59E0B] px-2.5 sm:h-9 sm:px-3.5 text-[11px] sm:text-xs font-bold text-[#0F172A] transition-colors hover:bg-amber-400 whitespace-nowrap"
+              onClick={() => setSubmitModalMode('full')}
+              className="inline-flex h-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-r from-amber-300 to-amber-400 px-2.5 sm:h-9 sm:px-3.5 text-[11px] sm:text-xs font-extrabold text-[#1E1B4B] shadow-xs transition-all hover:from-amber-200 hover:to-amber-300 whitespace-nowrap"
             >
-              {isStrictSectional && !isLastSection ? 'Submit Sec' : 'Submit'}
+              Submit Test
             </button>
           </div>
         </div>
 
-        {/* Strict Sectional Lock Bar */}
+        {/* Strict Sectional Lock Bar (Clean labels without Q26-50 ranges) */}
         {isStrictSectional && (
-          <div className="border-t border-slate-800 bg-slate-900/95">
+          <div className="border-t border-white/10 bg-black/20 backdrop-blur-xs">
             <div className="mx-auto flex max-w-[1440px] items-center gap-1.5 overflow-x-auto px-2.5 py-1.5 sm:gap-2 sm:px-6">
               {sections.map((sec, idx) => {
                 const isDone = idx < activeSectionIndex;
                 const isCurrent = idx === activeSectionIndex;
                 const isLocked = idx > activeSectionIndex;
+                const pillLabel = getSectionPillLabel(sec.shortName, sec.name);
                 return (
                   <div
                     key={sec.id}
@@ -676,26 +784,23 @@ export function ExamInterface({
                           ? 'Section completed and locked'
                           : `${sec.name} — active (${sec.durationMinutes}:00 timer)`
                     }
-                    className={`inline-flex shrink-0 items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-bold whitespace-nowrap tabular-nums sm:text-xs ${
+                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-bold whitespace-nowrap transition-colors sm:text-xs ${
                       isCurrent
-                        ? 'border-[#F59E0B] bg-[#1E3A8A] text-white shadow-xs'
+                        ? 'border-amber-300/70 bg-white/20 text-white shadow-xs backdrop-blur-xs'
                         : isDone
-                          ? 'border-emerald-700/60 bg-emerald-950/60 text-emerald-300'
-                          : 'border-slate-700/70 bg-slate-800/50 text-slate-400'
+                          ? 'border-emerald-400/35 bg-emerald-500/20 text-emerald-100'
+                          : 'border-white/10 bg-white/5 text-indigo-200/70'
                     }`}
                   >
                     {isDone ? (
-                      <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-400" aria-hidden="true" />
+                      <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-300" aria-hidden="true" />
                     ) : isLocked ? (
-                      <Lock className="h-2.5 w-2.5 shrink-0 text-slate-500" aria-hidden="true" />
+                      <Lock className="h-2.5 w-2.5 shrink-0 text-indigo-300/60" aria-hidden="true" />
                     ) : (
-                      <Clock className="h-3 w-3 shrink-0 text-[#F59E0B]" aria-hidden="true" />
+                      <Clock className="h-3 w-3 shrink-0 text-amber-300" aria-hidden="true" />
                     )}
                     <span>
-                      {idx + 1}. {sec.shortName}
-                    </span>
-                    <span className="text-[10px] opacity-75">
-                      (Q{sec.startIndex + 1}–{sec.endIndex + 1})
+                      {idx + 1}. {pillLabel}
                     </span>
                   </div>
                 );
@@ -716,16 +821,12 @@ export function ExamInterface({
       <div className="mx-auto flex min-h-0 w-full max-w-[1440px] flex-1 overflow-hidden">
         {/* Question Canvas — Pinned Sub-toolbar, Flex Middle Card, Pinned Bottom Action Bar */}
         <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          {/* Sub-toolbar: Question Index, EN / HI Switcher & Marks */}
+          {/* Sub-toolbar: Per-section Q1/25 Counter (No live topic hint), EN/HI Switcher & Marks */}
           <div className="shrink-0 border-b border-slate-200 bg-white px-3 py-1.5 sm:px-6 sm:py-2.5">
             <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-2">
-              <div className="flex min-w-0 items-center gap-1.5 text-xs sm:text-sm">
-                <span className="shrink-0 font-bold text-[#0F172A] tabular-nums">
-                  Q{currentIndex + 1}/{test.questions.length}
-                </span>
-                <span className="text-slate-300" aria-hidden="true">·</span>
-                <span className="truncate font-semibold text-amber-700">
-                  {currentQuestion.topic}
+              <div className="flex min-w-0 items-center gap-2 text-xs sm:text-sm">
+                <span className="shrink-0 rounded-md bg-indigo-50 px-2 py-0.5 font-mono font-extrabold text-[#1E1B4B] tabular-nums">
+                  Q{localQuestionNumber}/{sectionQuestionTotal}
                 </span>
               </div>
 
@@ -976,109 +1077,258 @@ export function ExamInterface({
         </div>
       )}
 
-      {/* Submit Section / Submit Test Confirmation Modal */}
-      {isSubmitModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+      {/* Section Advance Modal (Next Sec on Sections 1-3) */}
+      {submitModalMode === 'section' && isStrictSectional && !isLastSection && activeSection && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/55 p-4 backdrop-blur-[2px]">
           <div
             role="dialog"
             aria-modal="true"
-            aria-labelledby="submit-modal-title"
-            className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
+            aria-labelledby="section-modal-title"
+            className="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
           >
-            <h2 id="submit-modal-title" className="text-lg font-bold text-[#0F172A]">
-              {isStrictSectional && !isLastSection && activeSection
-                ? `Submit Section ${activeSectionIndex + 1}: ${activeSection.shortName}?`
-                : `Submit ${test.title}?`}
-            </h2>
-            <p className="mt-1 text-sm text-slate-600">
-              {isStrictSectional && !isLastSection && nextSection
-                ? `Once submitted, this section will be locked and you will move immediately to Section ${activeSectionIndex + 2}: ${nextSection.name} (${nextSection.durationMinutes}:00 timer).`
-                : 'Review your question summary before finalizing your submission.'}
-            </p>
-
-            <div className="mt-4 grid grid-cols-2 gap-3 text-sm tabular-nums">
-              <div className="flex items-start gap-2.5 rounded-xl border border-blue-200 bg-blue-50/70 p-3">
-                <div className="w-6 shrink-0 pt-0.5">
-                  <PaletteSymbol state="not-attempted" label={modalCounts.notAttempted} size="sm" />
-                </div>
-                <div>
-                  <div className="text-[11px] font-semibold text-blue-900 leading-tight">
-                    Not Attempted
-                  </div>
-                  <div className="mt-0.5 text-lg font-bold text-[#1D4ED8]">
-                    {modalCounts.notAttempted}
-                  </div>
-                </div>
+            <div className="bg-gradient-to-r from-[#1E1B4B] via-[#252262] to-[#312E81] px-5 py-4 text-white">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-amber-300">
+                Section {activeSectionIndex + 1} of {sections.length}
               </div>
-
-              <div className="flex items-start gap-2.5 rounded-xl border border-green-200 bg-green-50/70 p-3">
-                <div className="w-6 shrink-0 pt-0.5">
-                  <PaletteSymbol state="answered" label={modalCounts.answered} size="sm" />
-                </div>
-                <div>
-                  <div className="text-[11px] font-semibold text-green-900 leading-tight">
-                    Answered
-                  </div>
-                  <div className="mt-0.5 text-lg font-bold text-[#16A34A]">
-                    {modalCounts.answered}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50/70 p-3">
-                <div className="w-6 shrink-0 pt-0.5">
-                  <PaletteSymbol state="marked" label={modalCounts.markedNotAttempted} size="sm" />
-                </div>
-                <div>
-                  <div className="text-[11px] font-semibold text-red-900 leading-tight">
-                    Not Attempted &amp; Review
-                  </div>
-                  <div className="mt-0.5 text-lg font-bold text-[#DC2626]">
-                    {modalCounts.markedNotAttempted}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50/70 p-3">
-                <div className="w-6 shrink-0 pt-0.5">
-                  <PaletteSymbol
-                    state="answered-marked"
-                    label={modalCounts.answeredMarked}
-                    size="sm"
-                  />
-                </div>
-                <div>
-                  <div className="text-[11px] font-semibold text-amber-950 leading-tight">
-                    Answered &amp; Review
-                  </div>
-                  <div className="mt-0.5 text-lg font-bold text-amber-800">
-                    {modalCounts.answeredMarked}
-                  </div>
-                </div>
-              </div>
+              <h2 id="section-modal-title" className="mt-0.5 text-base font-extrabold">
+                Move to Next Section?
+              </h2>
             </div>
 
-            <div className="mt-6 flex items-center justify-end gap-3">
+            <div className="p-5">
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Once locked,{' '}
+                <span className="font-bold text-[#0F172A]">
+                  {getSectionPillLabel(activeSection.shortName, activeSection.name)}
+                </span>{' '}
+                cannot be reopened and you will start{' '}
+                <span className="font-bold text-[#1E1B4B]">
+                  {nextSection
+                    ? `${getSectionPillLabel(nextSection.shortName, nextSection.name)} (${nextSection.durationMinutes}:00)`
+                    : 'the next section'}
+                </span>
+                .
+              </p>
+
+              <div className="mt-4 grid grid-cols-2 gap-2.5 text-sm tabular-nums">
+                <div className="flex items-start gap-2 rounded-xl border border-blue-200 bg-blue-50/70 p-2.5">
+                  <div className="w-6 shrink-0 pt-0.5">
+                    <PaletteSymbol
+                      state="not-attempted"
+                      label={sectionStatusCounts.notAttempted}
+                      size="sm"
+                    />
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-semibold text-blue-900">Not Attempted</div>
+                    <div className="text-base font-extrabold text-[#1D4ED8]">
+                      {sectionStatusCounts.notAttempted}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2 rounded-xl border border-green-200 bg-green-50/70 p-2.5">
+                  <div className="w-6 shrink-0 pt-0.5">
+                    <PaletteSymbol state="answered" label={sectionStatusCounts.answered} size="sm" />
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-semibold text-green-900">Answered</div>
+                    <div className="text-base font-extrabold text-[#16A34A]">
+                      {sectionStatusCounts.answered}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50/70 p-2.5">
+                  <div className="w-6 shrink-0 pt-0.5">
+                    <PaletteSymbol
+                      state="marked"
+                      label={sectionStatusCounts.markedNotAttempted}
+                      size="sm"
+                    />
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-semibold text-red-900">Review (Unans.)</div>
+                    <div className="text-base font-extrabold text-[#DC2626]">
+                      {sectionStatusCounts.markedNotAttempted}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50/70 p-2.5">
+                  <div className="w-6 shrink-0 pt-0.5">
+                    <PaletteSymbol
+                      state="answered-marked"
+                      label={sectionStatusCounts.answeredMarked}
+                      size="sm"
+                    />
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-semibold text-amber-950">Review (Ans.)</div>
+                    <div className="text-base font-extrabold text-amber-800">
+                      {sectionStatusCounts.answeredMarked}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-5 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setSubmitModalMode('none')}
+                  className="min-h-[42px] rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 hover:bg-slate-100"
+                >
+                  Continue Section
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAdvanceSection(false)}
+                  className="min-h-[42px] rounded-xl bg-gradient-to-r from-[#1E1B4B] via-[#252262] to-[#312E81] px-4 py-2 text-xs sm:text-sm font-bold text-white shadow-xs hover:opacity-95"
+                >
+                  Lock &amp; Next Section →
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Original SSC Sathi "Exam Summary" Confirmation Modal (Full Test Submit) */}
+      {submitModalMode === 'full' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-3 sm:p-4 backdrop-blur-[2px]">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="exam-summary-modal-title"
+            className="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+          >
+            {/* Sleek SSC Sathi Header Strip */}
+            <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-[#1E1B4B] via-[#252262] to-[#312E81] px-5 py-4 text-white">
+              <div className="flex min-w-0 items-center gap-2.5">
+                <img
+                  src="/assets/aistudio/1795032296907_b1ef824a.png"
+                  alt="SSC Sathi"
+                  className="h-8 w-8 shrink-0 rounded-full bg-white object-cover ring-2 ring-amber-300/60"
+                />
+                <div className="min-w-0">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-amber-300">
+                    SSC Sathi · Exam Summary
+                  </div>
+                  <h2
+                    id="exam-summary-modal-title"
+                    className="truncate text-sm sm:text-base font-extrabold text-white"
+                  >
+                    {test.title}
+                  </h2>
+                </div>
+              </div>
               <button
                 type="button"
-                onClick={() => setIsSubmitModalOpen(false)}
-                className="min-h-[44px] rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                onClick={() => setSubmitModalMode('none')}
+                aria-label="Close Exam Summary"
+                className="rounded-lg border border-white/15 bg-white/10 p-1.5 text-white hover:bg-white/20"
               >
-                {isStrictSectional && !isLastSection ? 'Continue Section' : 'Resume Test'}
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (isStrictSectional && !isLastSection) {
-                    handleAdvanceSection(false);
-                  } else {
-                    handleFinalizeSubmit(responses, secondsLeft, elapsedPriorSeconds);
-                  }
-                }}
-                className="min-h-[44px] rounded-xl bg-[#F59E0B] px-5 py-2 text-sm font-bold text-[#0F172A] hover:bg-amber-400"
-              >
-                {isStrictSectional && !isLastSection ? 'Lock & Next Section' : 'Confirm Submit'}
-              </button>
+            </div>
+
+            <div className="p-4 sm:p-5">
+              {/* Column Header */}
+              <div className="grid grid-cols-[1.4fr_1fr_1fr_1fr] items-center gap-1.5 px-3 pb-2 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                <span>Section</span>
+                <span className="text-center text-[#16A34A]">Attempted</span>
+                <span className="text-center text-[#DC2626]">Unattempted</span>
+                <span className="text-center text-amber-600">Review</span>
+              </div>
+
+              {/* Distinct Card-Based Rows for All Sections */}
+              <div className="space-y-2">
+                {examSummaryRows.map((row) => {
+                  const isRowActive =
+                    isStrictSectional && row.index === activeSectionIndex;
+                  return (
+                    <div
+                      key={row.id}
+                      className={`grid grid-cols-[1.4fr_1fr_1fr_1fr] items-center gap-1.5 rounded-xl border px-3 py-2.5 tabular-nums ${
+                        isRowActive
+                          ? 'border-indigo-300 bg-indigo-50/50'
+                          : 'border-slate-200 bg-[#F8FAFC]'
+                      }`}
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="truncate text-xs sm:text-sm font-bold text-[#0F172A]">
+                            {row.label}
+                          </span>
+                          {isRowActive && (
+                            <span className="shrink-0 rounded bg-[#1E1B4B] px-1.5 py-0.5 text-[9px] font-bold uppercase text-amber-300">
+                              Live
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[10px] font-medium text-slate-500">
+                          {row.total} Qs
+                        </div>
+                      </div>
+
+                      <div className="text-center">
+                        <span className="inline-flex min-w-[36px] items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1 font-mono text-xs sm:text-sm font-extrabold text-[#16A34A]">
+                          {row.attempted}
+                        </span>
+                      </div>
+
+                      <div className="text-center">
+                        <span className="inline-flex min-w-[36px] items-center justify-center rounded-lg border border-rose-200 bg-rose-50 px-2 py-1 font-mono text-xs sm:text-sm font-extrabold text-[#DC2626]">
+                          {row.unattempted}
+                        </span>
+                      </div>
+
+                      <div className="text-center">
+                        <span className="inline-flex min-w-[36px] items-center justify-center rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 font-mono text-xs sm:text-sm font-extrabold text-amber-700">
+                          {row.marked}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Highlighted Total Summary Bar (out of 100) */}
+              <div className="mt-3 grid grid-cols-[1.4fr_1fr_1fr_1fr] items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50/80 px-3 py-2.5 tabular-nums">
+                <div>
+                  <div className="text-xs sm:text-sm font-extrabold text-[#1E1B4B]">Total</div>
+                  <div className="text-[10px] font-semibold text-indigo-700">
+                    Out of {examSummaryTotals.total} Qs
+                  </div>
+                </div>
+                <div className="text-center font-mono text-sm sm:text-base font-extrabold text-[#16A34A]">
+                  {examSummaryTotals.attempted}
+                </div>
+                <div className="text-center font-mono text-sm sm:text-base font-extrabold text-[#DC2626]">
+                  {examSummaryTotals.unattempted}
+                </div>
+                <div className="text-center font-mono text-sm sm:text-base font-extrabold text-amber-700">
+                  {examSummaryTotals.marked}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="mt-5 flex items-center justify-between gap-2.5 sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => setSubmitModalMode('none')}
+                  className="min-h-[44px] flex-1 sm:flex-none rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 transition-colors hover:bg-slate-100"
+                >
+                  Resume Test
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleFinalizeSubmit(responses, secondsLeft, elapsedPriorSeconds)}
+                  className="min-h-[44px] flex-1 sm:flex-none rounded-xl bg-gradient-to-r from-[#1E1B4B] via-[#252262] to-[#312E81] px-5 py-2 text-xs sm:text-sm font-extrabold text-white shadow-sm transition-opacity hover:opacity-95 whitespace-nowrap"
+                >
+                  Confirm &amp; Submit Test
+                </button>
+              </div>
             </div>
           </div>
         </div>

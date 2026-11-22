@@ -98,10 +98,38 @@ const LETTER_TO_INDEX: Record<string, OptionIndex> = {
   '4': 3,
 };
 
+const VALID_VISUAL_TYPES = new Set([
+  'bar',
+  'stacked-bar',
+  'line',
+  'histogram',
+  'pie',
+  'venn2',
+  'venn3',
+  'cube-net',
+]);
+
+function parseVisualSpec(raw: unknown): Question['visual'] {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const candidate = raw as Record<string, unknown>;
+  if (typeof candidate.type !== 'string' || !VALID_VISUAL_TYPES.has(candidate.type)) {
+    return undefined;
+  }
+  return candidate as unknown as Question['visual'];
+}
+
+function parseMatrixSpec(raw: unknown): string[][] | undefined {
+  if (!Array.isArray(raw) || raw.length === 0) return undefined;
+  if (!raw.every((row) => Array.isArray(row))) return undefined;
+  return raw.map((row) => (row as unknown[]).map((cell) => String(cell)));
+}
+
 /**
  * Supports either JSON array of questions OR plain-text blocks:
  * Q: Question text (or Q1. Question text)
  * TOPIC: Optional topic
+ * VISUAL: Optional JSON chart/diagram spec (bar, stacked-bar, line, histogram, pie, venn2, venn3, cube-net)
+ * MATRIX: Optional JSON 2D array for number/letter matrices
  * A) Option A
  * B) Option B
  * C) Option C
@@ -142,13 +170,31 @@ export function parseBulkQuestions(input: string): BulkParseResult {
           if (mapped !== undefined) correctIndex = mapped;
         }
 
+        const parsedVisual = parseVisualSpec(item.visual);
+        const parsedMatrix = parseMatrixSpec(item.matrix);
+        const optsHiRaw = Array.isArray(item.optionsHi) && item.optionsHi.length === 4
+          ? (item.optionsHi.map((o: unknown) => String(o).trim()) as [string, string, string, string])
+          : undefined;
+
         questions.push({
           id: `custom_q_${Date.now()}_${idx}_${Math.random().toString(36).slice(2, 6)}`,
           topic: String(item.topic || 'General').trim(),
           questionEn: qEn,
+          ...(typeof item.questionHi === 'string' && item.questionHi.trim()
+            ? { questionHi: item.questionHi.trim() }
+            : {}),
+          ...(typeof item.passageEn === 'string' && item.passageEn.trim()
+            ? { passageEn: item.passageEn.trim() }
+            : {}),
+          ...(parsedMatrix ? { matrix: parsedMatrix } : {}),
+          ...(parsedVisual ? { visual: parsedVisual } : {}),
           optionsEn: optsRaw.map((o: unknown) => String(o).trim()) as [string, string, string, string],
+          ...(optsHiRaw ? { optionsHi: optsHiRaw } : {}),
           correctIndex,
           explanationEn: String(item.explanationEn || item.explanation || 'Correct answer marked by test creator.').trim(),
+          ...(typeof item.explanationHi === 'string' && item.explanationHi.trim()
+            ? { explanationHi: item.explanationHi.trim() }
+            : {}),
         });
       });
 
@@ -197,10 +243,26 @@ export function parseBulkQuestions(input: string): BulkParseResult {
     const options: string[] = ['', '', '', ''];
     let correctIndex: OptionIndex | null = null;
     let explanationEn = '';
+    let visual: Question['visual'];
+    let matrix: string[][] | undefined;
 
     for (const line of block) {
       if (/^(?:TOPIC|SUBJECT)\s*[:.)]\s*/i.test(line)) {
         topic = line.replace(/^(?:TOPIC|SUBJECT)\s*[:.)]\s*/i, '').trim();
+      } else if (/^(?:VISUAL|CHART|DIAGRAM)\s*[:]\s*/i.test(line)) {
+        const jsonPart = line.replace(/^(?:VISUAL|CHART|DIAGRAM)\s*[:]\s*/i, '').trim();
+        try {
+          visual = parseVisualSpec(JSON.parse(jsonPart));
+        } catch {
+          errors.push(`Block #${blockIdx + 1}: Invalid VISUAL JSON definition.`);
+        }
+      } else if (/^MATRIX\s*[:]\s*/i.test(line)) {
+        const jsonPart = line.replace(/^MATRIX\s*[:]\s*/i, '').trim();
+        try {
+          matrix = parseMatrixSpec(JSON.parse(jsonPart));
+        } catch {
+          errors.push(`Block #${blockIdx + 1}: Invalid MATRIX JSON definition.`);
+        }
       } else if (/^(?:Q(?:\d+)?\s*[:.)]|Question\s*\d*\s*[:.)]|\d+\s*[.)]\s+)/i.test(line)) {
         questionEn = line.replace(/^(?:Q(?:\d+)?\s*[:.)]|Question\s*\d*\s*[:.)]|\d+\s*[.)]\s+)/i, '').trim();
       } else if (/^\(?A\)?\s*[.):-]\s*/i.test(line)) {
@@ -243,6 +305,8 @@ export function parseBulkQuestions(input: string): BulkParseResult {
       id: `custom_q_${Date.now()}_${blockIdx}_${Math.random().toString(36).slice(2, 6)}`,
       topic,
       questionEn,
+      ...(matrix ? { matrix } : {}),
+      ...(visual ? { visual } : {}),
       optionsEn: [options[0], options[1], options[2], options[3]],
       correctIndex,
       explanationEn: explanationEn || `Option ${['A', 'B', 'C', 'D'][correctIndex]} is the correct answer.`,

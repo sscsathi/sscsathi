@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 315" width="460" height="315">
+  <rect width="460" height="315" fill="#FFFFFF"/>
+  <text x="230" y="20" text-anchor="middle" fill="#0F172A" font-family="sans-serif" font-size="13.5" font-weight="700">Figure (X)</text>
+
+  <!-- Figure X centered -->
+  <g transform="translate(170,28)">
+    <rect width="120" height="114" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+    <circle cx="60" cy="57" r="49" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+    <!-- Vertical axis from center to bottom + top V -->
+    <line x1="60" y1="36" x2="60" y2="106" stroke="#0F172A" stroke-width="1.8"/>
+    <!-- Right horizontal radius -->
+    <line x1="60" y1="57" x2="109" y2="57" stroke="#0F172A" stroke-width="1.8"/>
+    <!-- Embedded symmetric M-crown polygon inside circle -->
+    <polyline points="25,92 38,13 60,36 82,13 95,92" fill="none" stroke="#0F172A" stroke-width="1.9" stroke-linejoin="round"/>
+    <!-- Diagonals crossing through center (60,57) -->
+    <line x1="25" y1="92" x2="96" y2="23" stroke="#0F172A" stroke-width="1.8"/>
+    <line x1="24" y1="23" x2="95" y2="92" stroke="#0F172A" stroke-width="1.8"/>
+    <line x1="60" y1="57" x2="82" y2="13" stroke="#0F172A" stroke-width="1.8"/>
+  </g>
+
+  <text x="16" y="168" fill="#0F172A" font-family="sans-serif" font-size="13" font-weight="700">Alternative Figures:</text>
+
+  <!-- (1): Curved dart/arrowhead -->
+  <g transform="translate(22,180)">
+    <rect width="92" height="92" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+    <path d="M 14 26 L 78 46 Q 60 52 58 76 Q 40 48 14 26 Z" fill="none" stroke="#0F172A" stroke-width="2" stroke-linejoin="round"/>
+    <text x="46" y="114" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="#0F172A">(1)</text>
+  </g>
+
+  <!-- (2): Arc + chord + vertical split -->
+  <g transform="translate(128,180)">
+    <rect width="92" height="92" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+    <path d="M 24 68 A 28 28 0 0 1 46 22 L 72 40 L 24 68 Z" fill="none" stroke="#0F172A" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="46" y1="22" x2="46" y2="55" stroke="#0F172A" stroke-width="2"/>
+    <text x="46" y="114" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="#0F172A">(2)</text>
+  </g>
+
+  <!-- (3): Symmetric M/crown hourglass (Correct!) -->
+  <g transform="translate(234,180)">
+    <rect width="92" height="92" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+    <polygon points="18,78 28,14 46,36 64,14 74,78 46,50" fill="none" stroke="#0F172A" stroke-width="2" stroke-linejoin="round"/>
+    <text x="46" y="114" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="#0F172A">(3)</text>
+  </g>
+
+  <!-- (4): Parallelogram with altitude and diagonal -->
+  <g transform="translate(340,180)">
+    <rect width="92" height="92" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+    <polygon points="12,68 28,28 80,28 64,68" fill="none" stroke="#0F172A" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="28" y1="28" x2="28" y2="68" stroke="#0F172A" stroke-width="2"/>
+    <line x1="28" y1="28" x2="64" y2="68" stroke="#0F172A" stroke-width="2"/>
+    <text x="46" y="114" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="#0F172A">(4)</text>
+  </g>
+</svg>

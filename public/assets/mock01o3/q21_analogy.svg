@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 285" width="460" height="285">
+  <rect width="460" height="285" fill="#FFFFFF"/>
+  <text x="16" y="20" fill="#0F172A" font-family="sans-serif" font-size="13" font-weight="700">Question Figures:</text>
+
+  <!-- Helper macro layout: Row 1 (y=30..124, boxes 92x92) -->
+  <!-- Fig 1: TL=TT, TR=XX, BL=OO, BR=VV -->
+  <g transform="translate(18,30)">
+    <rect width="90" height="90" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+    <circle cx="45" cy="45" r="37" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+    <line x1="45" y1="8" x2="45" y2="82" stroke="#0F172A" stroke-width="1.8"/>
+    <line x1="8" y1="45" x2="82" y2="45" stroke="#0F172A" stroke-width="1.8"/>
+    <text x="27" y="34" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(-45 27 30)">TT</text>
+    <text x="63" y="34" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(45 63 30)">XX</text>
+    <text x="27" y="64" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(-135 27 60)">OO</text>
+    <text x="63" y="64" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(135 63 60)">VV</text>
+  </g>
+
+  <!-- Single colon -->
+  <circle cx="118" cy="68" r="2.8" fill="#0F172A"/>
+  <circle cx="118" cy="84" r="2.8" fill="#0F172A"/>
+
+  <!-- Fig 2: TL=VV, TR=OO, BL=XX, BR=TT -->
+  <g transform="translate(128,30)">
+    <rect width="90" height="90" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+    <circle cx="45" cy="45" r="37" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+    <line x1="45" y1="8" x2="45" y2="82" stroke="#0F172A" stroke-width="1.8"/>
+    <line x1="8" y1="45" x2="82" y2="45" stroke="#0F172A" stroke-width="1.8"/>
+    <text x="27" y="34" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(-45 27 30)">VV</text>
+    <text x="63" y="34" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(45 63 30)">OO</text>
+    <text x="27" y="64" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(-135 27 60)">XX</text>
+    <text x="63" y="64" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(135 63 60)">TT</text>
+  </g>
+
+  <!-- Double colon :: -->
+  <circle cx="228" cy="68" r="2.8" fill="#0F172A"/>
+  <circle cx="228" cy="84" r="2.8" fill="#0F172A"/>
+  <circle cx="238" cy="68" r="2.8" fill="#0F172A"/>
+  <circle cx="238" cy="84" r="2.8" fill="#0F172A"/>
+
+  <!-- Fig 3: TL=OO, TR=VV, BL=XX, BR=TT -->
+  <g transform="translate(248,30)">
+    <rect width="90" height="90" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+    <circle cx="45" cy="45" r="37" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+    <line x1="45" y1="8" x2="45" y2="82" stroke="#0F172A" stroke-width="1.8"/>
+    <line x1="8" y1="45" x2="82" y2="45" stroke="#0F172A" stroke-width="1.8"/>
+    <text x="27" y="34" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(-45 27 30)">OO</text>
+    <text x="63" y="34" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(45 63 30)">VV</text>
+    <text x="27" y="64" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(-135 27 60)">XX</text>
+    <text x="63" y="64" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(135 63 60)">TT</text>
+  </g>
+
+  <!-- Single colon -->
+  <circle cx="348" cy="68" r="2.8" fill="#0F172A"/>
+  <circle cx="348" cy="84" r="2.8" fill="#0F172A"/>
+
+  <!-- Fig 4: ? -->
+  <g transform="translate(358,30)">
+    <rect width="84" height="90" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+    <text x="42" y="61" text-anchor="middle" font-family="serif" font-size="46" font-weight="700" fill="#0F172A">?</text>
+  </g>
+
+  <!-- Row 2: Answer Figures -->
+  <text x="16" y="150" fill="#0F172A" font-family="sans-serif" font-size="13" font-weight="700">Answer Figures:</text>
+
+  <!-- (1): TL=VV, TR=XX, BL=OO, BR=TT -->
+  <g transform="translate(22,162)">
+    <rect width="90" height="90" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+    <circle cx="45" cy="45" r="37" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+    <line x1="45" y1="8" x2="45" y2="82" stroke="#0F172A" stroke-width="1.8"/>
+    <line x1="8" y1="45" x2="82" y2="45" stroke="#0F172A" stroke-width="1.8"/>
+    <text x="27" y="34" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(-45 27 30)">VV</text>
+    <text x="63" y="34" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(45 63 30)">XX</text>
+    <text x="27" y="64" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(-135 27 60)">OO</text>
+    <text x="63" y="64" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(135 63 60)">TT</text>
+    <text x="45" y="112" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="#0F172A">(1)</text>
+  </g>
+
+  <!-- (2): TL=OO, TR=XX, BL=VV, BR=TT -->
+  <g transform="translate(130,162)">
+    <rect width="90" height="90" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+    <circle cx="45" cy="45" r="37" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+    <line x1="45" y1="8" x2="45" y2="82" stroke="#0F172A" stroke-width="1.8"/>
+    <line x1="8" y1="45" x2="82" y2="45" stroke="#0F172A" stroke-width="1.8"/>
+    <text x="27" y="34" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(-45 27 30)">OO</text>
+    <text x="63" y="34" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(45 63 30)">XX</text>
+    <text x="27" y="64" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(-135 27 60)">VV</text>
+    <text x="63" y="64" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(135 63 60)">TT</text>
+    <text x="45" y="112" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="#0F172A">(2)</text>
+  </g>
+
+  <!-- (3): TL=TT, TR=XX, BL=VV, BR=OO (Correct!) -->
+  <g transform="translate(238,162)">
+    <rect width="90" height="90" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+    <circle cx="45" cy="45" r="37" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+    <line x1="45" y1="8" x2="45" y2="82" stroke="#0F172A" stroke-width="1.8"/>
+    <line x1="8" y1="45" x2="82" y2="45" stroke="#0F172A" stroke-width="1.8"/>
+    <text x="27" y="34" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(-45 27 30)">TT</text>
+    <text x="63" y="34" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(45 63 30)">XX</text>
+    <text x="27" y="64" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(-135 27 60)">VV</text>
+    <text x="63" y="64" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(135 63 60)">OO</text>
+    <text x="45" y="112" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="#0F172A">(3)</text>
+  </g>
+
+  <!-- (4): TL=VV, TR=TT, BL=XX, BR=OO -->
+  <g transform="translate(346,162)">
+    <rect width="90" height="90" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+    <circle cx="45" cy="45" r="37" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+    <line x1="45" y1="8" x2="45" y2="82" stroke="#0F172A" stroke-width="1.8"/>
+    <line x1="8" y1="45" x2="82" y2="45" stroke="#0F172A" stroke-width="1.8"/>
+    <text x="27" y="34" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(-45 27 30)">VV</text>
+    <text x="63" y="34" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(45 63 30)">TT</text>
+    <text x="27" y="64" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(-135 27 60)">XX</text>
+    <text x="63" y="64" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" transform="rotate(135 63 60)">OO</text>
+    <text x="45" y="112" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="#0F172A">(4)</text>
+  </g>
+</svg>

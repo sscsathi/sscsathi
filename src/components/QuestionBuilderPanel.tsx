@@ -16,6 +16,7 @@ import {
 } from '../types/exam';
 import { parseBulkQuestions } from '../utils/storage';
 import { MathText } from './MathText';
+import { QuestionVisual } from './QuestionVisual';
 
 interface QuestionBuilderPanelProps {
   existingTests: MockTest[];
@@ -561,10 +562,11 @@ export function QuestionBuilderPanel({
                   key={q.id}
                   className="flex items-start justify-between gap-3 rounded-xl border border-slate-200 bg-[#F8FAFC] p-3 text-xs"
                 >
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="font-semibold text-[#0F172A]">
                       Q{idx + 1}. <MathText text={q.questionEn} />
                     </div>
+                    {q.visual && <QuestionVisual visual={q.visual} compact />}
                     <div className="mt-1 text-slate-600">
                       Topic: {q.topic} · Correct: Option{' '}
                       {['A', 'B', 'C', 'D'][q.correctIndex]}

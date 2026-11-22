@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 240" width="280" height="240">
+  <rect width="280" height="240" fill="#FFFFFF"/>
+  <!-- Outer large inverted triangle -->
+  <polygon points="24,18 256,18 140,224" fill="none" stroke="#0F172A" stroke-width="2.6" stroke-linejoin="round"/>
+  <!-- Middle upright triangle (top vertex at midpoint of top edge, bottom edge at y=160) -->
+  <polygon points="140,18 56,160 224,160" fill="none" stroke="#0F172A" stroke-width="2.6" stroke-linejoin="round"/>
+  <!-- Inner inverted triangle (top edge at y=58, bottom vertex at (140,160)) -->
+  <polygon points="82,58 198,58 140,160" fill="none" stroke="#0F172A" stroke-width="2.6" stroke-linejoin="round"/>
+  <!-- Full vertical central median from (140,18) to (140,224) -->
+  <line x1="140" y1="18" x2="140" y2="224" stroke="#0F172A" stroke-width="2.6"/>
+</svg>

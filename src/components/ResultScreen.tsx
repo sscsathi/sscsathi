@@ -28,6 +28,7 @@ import {
 } from '../utils/fontZoom';
 import { estimatePercentile, formatDurationVerbose } from '../utils/scoring';
 import { MathText } from './MathText';
+import { QuestionVisual } from './QuestionVisual';
 
 interface ResultScreenProps {
   result: ExamResult;
@@ -822,12 +823,18 @@ export function ResultScreen({
                           />
                         </h3>
 
-                        {q.imageUrl && (
-                          <div className="mt-3 flex justify-center rounded-xl border border-slate-200 bg-white p-2.5">
+                        {q.visual && <QuestionVisual visual={q.visual} />}
+
+                        {!q.visual && q.imageUrl && (
+                          <div className="mt-3 flex w-full max-w-full justify-center overflow-hidden rounded-xl border border-slate-200 bg-white p-2.5">
                             <img
                               src={q.imageUrl}
                               alt="Question diagram"
-                              className="max-h-60 w-auto max-w-full object-contain grayscale contrast-[1.45] brightness-[1.12] mix-blend-multiply"
+                              className={
+                                q.imageUrl.endsWith('.svg')
+                                  ? 'max-h-64 sm:max-h-72 w-auto max-w-full object-contain'
+                                  : 'max-h-60 w-auto max-w-full object-contain grayscale contrast-[1.45] brightness-[1.12] mix-blend-multiply'
+                              }
                             />
                           </div>
                         )}

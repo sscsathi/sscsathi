@@ -1,3 +1,7 @@
+import { QuestionVisualSpec } from './visual';
+
+export type { QuestionVisualSpec } from './visual';
+
 export type OptionIndex = 0 | 1 | 2 | 3;
 
 export type QuestionStatus =
@@ -16,6 +20,7 @@ export interface Question {
   questionHi?: string;
   passageEn?: string;
   matrix?: string[][];
+  visual?: QuestionVisualSpec;
   imageUrl?: string;
   optionsEn: [string, string, string, string];
   optionsHi?: [string, string, string, string];

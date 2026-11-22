@@ -38,6 +38,7 @@ import {
 import { calculateExamResult, formatTimer } from '../utils/scoring';
 import { MathText } from './MathText';
 import { PaletteSymbol, toPaletteVisualState } from './PaletteSymbol';
+import { QuestionVisual } from './QuestionVisual';
 
 interface ExamInterfaceProps {
   test: MockTest;
@@ -1083,13 +1084,20 @@ export function ExamInterface({
                   <MathText text={displayedQuestionText} />
                 </h2>
 
+                {/* Programmatic Vector Chart / Diagram (SVG) */}
+                {currentQuestion.visual && <QuestionVisual visual={currentQuestion.visual} />}
+
                 {/* Question Diagram / Chart / Figure Image */}
-                {currentQuestion.imageUrl && (
-                  <div className="mt-2 flex justify-center rounded-lg border border-slate-200 bg-white p-1.5 sm:p-2">
+                {!currentQuestion.visual && currentQuestion.imageUrl && (
+                  <div className="mt-2.5 flex w-full max-w-full justify-center overflow-hidden rounded-xl border border-slate-200 bg-white p-2 sm:p-2.5">
                     <img
                       src={currentQuestion.imageUrl}
                       alt="Question diagram"
-                      className="max-h-36 sm:max-h-56 w-auto max-w-full object-contain grayscale contrast-[1.45] brightness-[1.12] mix-blend-multiply"
+                      className={
+                        currentQuestion.imageUrl.endsWith('.svg')
+                          ? 'max-h-56 sm:max-h-72 w-auto max-w-full object-contain'
+                          : 'max-h-44 sm:max-h-60 w-auto max-w-full object-contain grayscale contrast-[1.45] brightness-[1.12] mix-blend-multiply'
+                      }
                     />
                   </div>
                 )}

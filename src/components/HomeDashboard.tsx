@@ -315,11 +315,12 @@ export function HomeDashboard({
             </div>
 
             <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#1E3A8A] leading-tight">
-                SSC SATHI
+              <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-[#1E3A8A] leading-tight">
+                SSC Sathi
               </h1>
               <p className="mt-0.5 text-xs sm:text-sm font-medium text-slate-600 leading-snug">
-                India&apos;s Cleanest Mock Portal for CGL, CHSL &amp; MTS
+                Free online SSC CGL, CHSL, MTS &amp; Railway PYQ mock test platform with real CBT
+                exam interface, live timer, and instant bilingual solutions.
               </p>
             </div>
           </div>

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://sscsathi.vercel.app/sitemap.xml

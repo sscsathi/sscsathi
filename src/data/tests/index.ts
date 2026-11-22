@@ -1,6 +1,7 @@
 import { MockTest } from '../../types/exam';
 import { FULL_MOCK_05_OCT_SHIFT2 } from './mock05OctShift2';
 import { FULL_MOCK_05_OCT_SHIFT3 } from './cgl-2026-05-oct-shift3';
+import { FULL_MOCK_06_OCT_SHIFT1 } from './cgl-2026-06-oct-shift1';
 
 /**
  * Modular registry for future standalone mock tests stored inside `src/data/tests/`.
@@ -12,4 +13,5 @@ import { FULL_MOCK_05_OCT_SHIFT3 } from './cgl-2026-05-oct-shift3';
 export const ADDITIONAL_TESTS: MockTest[] = [
   FULL_MOCK_05_OCT_SHIFT2,
   FULL_MOCK_05_OCT_SHIFT3,
+  FULL_MOCK_06_OCT_SHIFT1,
 ];

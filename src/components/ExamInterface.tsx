@@ -89,13 +89,21 @@ export function ExamInterface({
 
   const currentQuestion = test.questions[currentIndex];
   const currentResponse = responses[currentQuestion.id];
+  const isEnglishSection = Boolean(
+    (activeSection &&
+      (activeSection.id === 'sec-english' ||
+        activeSection.shortName.toLowerCase().includes('english') ||
+        activeSection.name.toLowerCase().includes('english'))) ||
+      (!isStrictSectional && test.category.toLowerCase().includes('english'))
+  );
+  const effectiveLanguage: QuestionLanguage = isEnglishSection ? 'en' : language;
   const hasHindiForCurrent = Boolean(currentQuestion.questionHi);
   const displayedQuestionText =
-    language === 'hi' && currentQuestion.questionHi
+    effectiveLanguage === 'hi' && currentQuestion.questionHi
       ? currentQuestion.questionHi
       : currentQuestion.questionEn;
   const displayedOptions =
-    language === 'hi' && currentQuestion.optionsHi
+    effectiveLanguage === 'hi' && currentQuestion.optionsHi
       ? currentQuestion.optionsHi
       : currentQuestion.optionsEn;
 
@@ -831,41 +839,43 @@ export function ExamInterface({
               </div>
 
               <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-                {/* Clean EN / HI Language Switcher */}
-                <div
-                  role="group"
-                  aria-label="Question language"
-                  className="inline-flex items-center rounded-lg border border-slate-200 bg-white p-0.5 shadow-2xs"
-                >
-                  <Languages
-                    className="ml-1 mr-0.5 h-3.5 w-3.5 text-slate-400"
-                    aria-hidden="true"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setLanguage('en')}
-                    aria-pressed={language === 'en'}
-                    className={`rounded-md px-2 py-0.5 text-[11px] font-bold transition-colors sm:px-2.5 sm:text-xs ${
-                      language === 'en'
-                        ? 'bg-[#0F172A] text-white shadow-2xs'
-                        : 'text-slate-600 hover:bg-slate-100 hover:text-[#0F172A]'
-                    }`}
+                {/* Clean EN / HI Language Switcher (hidden in English section) */}
+                {!isEnglishSection && (
+                  <div
+                    role="group"
+                    aria-label="Question language"
+                    className="inline-flex items-center rounded-lg border border-slate-200 bg-white p-0.5 shadow-2xs"
                   >
-                    EN
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setLanguage('hi')}
-                    aria-pressed={language === 'hi'}
-                    className={`rounded-md px-2 py-0.5 text-[11px] font-bold transition-colors sm:px-2.5 sm:text-xs ${
-                      language === 'hi'
-                        ? 'bg-[#0F172A] text-white shadow-2xs'
-                        : 'text-slate-600 hover:bg-slate-100 hover:text-[#0F172A]'
-                    }`}
-                  >
-                    HI
-                  </button>
-                </div>
+                    <Languages
+                      className="ml-1 mr-0.5 h-3.5 w-3.5 text-slate-400"
+                      aria-hidden="true"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setLanguage('en')}
+                      aria-pressed={language === 'en'}
+                      className={`rounded-md px-2 py-0.5 text-[11px] font-bold transition-colors sm:px-2.5 sm:text-xs ${
+                        language === 'en'
+                          ? 'bg-[#0F172A] text-white shadow-2xs'
+                          : 'text-slate-600 hover:bg-slate-100 hover:text-[#0F172A]'
+                      }`}
+                    >
+                      EN
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLanguage('hi')}
+                      aria-pressed={language === 'hi'}
+                      className={`rounded-md px-2 py-0.5 text-[11px] font-bold transition-colors sm:px-2.5 sm:text-xs ${
+                        language === 'hi'
+                          ? 'bg-[#0F172A] text-white shadow-2xs'
+                          : 'text-slate-600 hover:bg-slate-100 hover:text-[#0F172A]'
+                      }`}
+                    >
+                      HI
+                    </button>
+                  </div>
+                )}
 
                 <span className="font-mono text-[11px] sm:text-xs font-semibold text-slate-600 tabular-nums whitespace-nowrap">
                   +{test.positiveMarks}/-{test.negativeMarks.toFixed(2)}
@@ -874,166 +884,255 @@ export function ExamInterface({
             </div>
           </div>
 
-          {/* Middle Question & 4 Options Area (Touch Swipe Left: Save & Next, Right: Prev) */}
+          {/* Middle Question & 4 Options Area (Split-View for Passage Questions, Standard Scroll for Normal Questions) */}
           <div
             onTouchStart={handleQuestionTouchStart}
             onTouchMove={handleQuestionTouchMove}
             onTouchEnd={handleQuestionTouchEnd}
             onTouchCancel={handleQuestionTouchCancel}
-            className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden touch-pan-y px-2.5 py-2 sm:px-6 sm:py-4"
+            className={
+              currentQuestion.passageEn
+                ? 'min-h-0 flex-1 flex flex-col overflow-hidden px-2.5 py-2 sm:px-6 sm:py-3.5'
+                : 'min-h-0 flex-1 overflow-y-auto overflow-x-hidden touch-pan-y px-2.5 py-2 sm:px-6 sm:py-4'
+            }
           >
-            <motion.section
-              key={currentQuestion.id}
-              initial={
-                swipeSlideDir === 'next'
-                  ? { x: 34, opacity: 0.65 }
-                  : swipeSlideDir === 'prev'
-                    ? { x: -34, opacity: 0.65 }
-                    : false
-              }
-              animate={{ x: swipeOffset, opacity: 1 }}
-              transition={
-                swipeOffset !== 0
-                  ? { duration: 0 }
-                  : { duration: 0.18, ease: 'easeOut' }
-              }
-              onAnimationComplete={() => {
-                if (swipeOffset === 0 && swipeSlideDir !== null) {
-                  setSwipeSlideDir(null);
+            {currentQuestion.passageEn ? (
+              <motion.section
+                key={currentQuestion.id}
+                initial={
+                  swipeSlideDir === 'next'
+                    ? { x: 34, opacity: 0.65 }
+                    : swipeSlideDir === 'prev'
+                      ? { x: -34, opacity: 0.65 }
+                      : false
                 }
-              }}
-              className="mx-auto w-full max-w-3xl rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3 sm:p-5 shadow-xs"
-            >
-              {language === 'hi' && !hasHindiForCurrent && (
-                <div className="mb-2 inline-flex items-center rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
-                  Hindi translation unavailable for this question — showing English
-                </div>
-              )}
-
-              {/* Reading Comprehension Passage Box */}
-              {currentQuestion.passageEn && (
-                <div className="mb-2.5 max-h-28 sm:max-h-44 overflow-y-auto rounded-lg border border-slate-200 bg-[#F8FAFC] p-2.5 sm:p-3.5 text-xs sm:text-sm leading-relaxed text-slate-800 whitespace-pre-line">
-                  <div className="mb-1 text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-[#1E3A8A]">
+                animate={{ x: swipeOffset, opacity: 1 }}
+                transition={
+                  swipeOffset !== 0
+                    ? { duration: 0 }
+                    : { duration: 0.18, ease: 'easeOut' }
+                }
+                onAnimationComplete={() => {
+                  if (swipeOffset === 0 && swipeSlideDir !== null) {
+                    setSwipeSlideDir(null);
+                  }
+                }}
+                className="mx-auto flex h-full min-h-0 w-full max-w-3xl flex-col overflow-hidden rounded-xl sm:rounded-2xl border border-slate-200 bg-white shadow-xs"
+              >
+                {/* Top Panel (~58% height): Full Scrollable Passage without truncation */}
+                <div className="min-h-0 flex-[58] overflow-y-auto touch-pan-y bg-[#F8FAFC] p-3 sm:p-5">
+                  <div className="mb-1.5 text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-[#1E3A8A]">
                     Read the passage carefully
                   </div>
-                  {currentQuestion.passageEn}
+                  <div className="text-[13px] sm:text-[14.5px] leading-relaxed text-slate-800 whitespace-pre-line">
+                    {currentQuestion.passageEn}
+                  </div>
                 </div>
-              )}
 
-              <h2 className="text-[13.5px] sm:text-base font-semibold leading-snug sm:leading-relaxed text-[#0F172A] whitespace-pre-line">
-                {displayedQuestionText}
-              </h2>
+                {/* Bottom Panel (~42% height): Question Prompt & 4 Compact Option Buttons */}
+                <div className="min-h-0 flex-[42] overflow-y-auto touch-pan-y border-t border-slate-200 bg-white p-2.5 sm:p-4 shadow-[0_-4px_12px_-6px_rgba(15,23,42,0.1)]">
+                  <h2 className="text-[13px] sm:text-sm font-semibold leading-snug text-[#0F172A] whitespace-pre-line">
+                    {displayedQuestionText}
+                  </h2>
 
-              {/* Question Diagram / Chart / Figure Image */}
-              {currentQuestion.imageUrl && (
-                <div className="mt-2 flex justify-center rounded-lg border border-slate-200 bg-white p-1.5 sm:p-2">
-                  <img
-                    src={currentQuestion.imageUrl}
-                    alt="Question diagram"
-                    className="max-h-36 sm:max-h-56 w-auto max-w-full object-contain grayscale contrast-[1.45] brightness-[1.12] mix-blend-multiply"
-                  />
-                </div>
-              )}
+                  <div
+                    className="mt-2 sm:mt-2.5 space-y-1.5 sm:space-y-2"
+                    role="radiogroup"
+                    aria-label="Answer options"
+                  >
+                    {OPTION_LETTERS.map((letter, idx) => {
+                      const optionIdx = idx as OptionIndex;
+                      const isSelected = currentResponse?.selectedIndex === optionIdx;
+                      const optText = displayedOptions[optionIdx];
 
-              {/* Structured Number Matrix (e.g., Q15 / Q22) */}
-              {currentQuestion.matrix && currentQuestion.matrix.length > 0 && (
-                <div className="mt-2.5 inline-block max-w-full overflow-x-auto rounded-lg border border-slate-300 bg-[#F8FAFC] shadow-2xs">
-                  <table className="border-collapse text-center font-mono text-xs sm:text-sm font-bold text-[#0F172A] tabular-nums">
-                    <tbody>
-                      {currentQuestion.matrix.map((row, rIdx) => (
-                        <tr
-                          key={rIdx}
-                          className="divide-x divide-slate-300 border-b border-slate-300 last:border-b-0"
-                        >
-                          {row.map((cell, cIdx) => (
-                            <td
-                              key={cIdx}
-                              className={`h-7 sm:h-9 min-w-[2.5rem] sm:min-w-[3.25rem] px-1.5 sm:px-2 ${
-                                cell === '?' ? 'bg-amber-100/80 text-[#1E3A8A]' : 'bg-white'
-                              }`}
-                            >
-                              {cell}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {/* Compact 4 Option Selection Cards (2x2 grid for figure options, vertical stack for text options) */}
-              <div
-                className={
-                  currentQuestion.optionImages
-                    ? 'mt-2.5 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-2.5'
-                    : 'mt-2.5 sm:mt-4 space-y-1.5 sm:space-y-2.5'
-                }
-                role="radiogroup"
-                aria-label="Answer options"
-              >
-                {OPTION_LETTERS.map((letter, idx) => {
-                  const optionIdx = idx as OptionIndex;
-                  const isSelected = currentResponse?.selectedIndex === optionIdx;
-                  const optText = displayedOptions[optionIdx];
-                  const optImg = currentQuestion.optionImages?.[optionIdx];
-
-                  return (
-                    <button
-                      key={letter}
-                      type="button"
-                      role="radio"
-                      aria-checked={isSelected}
-                      onClick={() => handleSelectOption(optionIdx)}
-                      className={`group flex w-full ${
-                        optImg ? 'min-h-[68px] sm:min-h-[82px]' : 'min-h-[42px] sm:min-h-[50px]'
-                      } items-center justify-between gap-2 rounded-xl border px-2.5 py-2 sm:px-4 sm:py-3 text-left transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F172A] ${
-                        isSelected
-                          ? 'border-[#0F172A] bg-amber-50/85 text-[#0F172A] ring-1 ring-[#0F172A] shadow-xs'
-                          : 'border-slate-200 bg-white text-slate-800 hover:border-slate-300 hover:bg-slate-50/80'
-                      }`}
-                    >
-                      <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
-                        <span
-                          className={`flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg font-mono text-xs font-bold transition-colors ${
+                      return (
+                        <button
+                          key={letter}
+                          type="button"
+                          role="radio"
+                          aria-checked={isSelected}
+                          onClick={() => handleSelectOption(optionIdx)}
+                          className={`group flex w-full min-h-[38px] sm:min-h-[44px] items-center justify-between gap-2 rounded-xl border px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-left transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F172A] ${
                             isSelected
-                              ? 'bg-[#0F172A] text-[#F59E0B]'
-                              : 'bg-slate-100 text-slate-700 group-hover:bg-slate-200/80'
+                              ? 'border-[#0F172A] bg-amber-50/85 text-[#0F172A] ring-1 ring-[#0F172A] shadow-xs'
+                              : 'border-slate-200 bg-white text-slate-800 hover:border-slate-300 hover:bg-slate-50/80'
                           }`}
                         >
-                          {letter}
-                        </span>
-
-                        {optImg ? (
-                          <div className="flex min-w-0 flex-1 items-center justify-center rounded-md bg-white p-1">
-                            <img
-                              src={optImg}
-                              alt={`Option ${letter}`}
-                              className="max-h-14 sm:max-h-20 w-auto max-w-full object-contain grayscale contrast-[1.45] brightness-[1.12] mix-blend-multiply"
-                            />
+                          <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-2.5">
+                            <span
+                              className={`flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-lg font-mono text-xs font-bold transition-colors ${
+                                isSelected
+                                  ? 'bg-[#0F172A] text-[#F59E0B]'
+                                  : 'bg-slate-100 text-slate-700 group-hover:bg-slate-200/80'
+                              }`}
+                            >
+                              {letter}
+                            </span>
+                            <span
+                              className={`text-[12.5px] sm:text-sm leading-snug ${
+                                isSelected ? 'font-bold text-[#0F172A]' : 'font-medium'
+                              }`}
+                            >
+                              {optText}
+                            </span>
                           </div>
-                        ) : (
+
+                          {isSelected && (
+                            <CheckCircle2
+                              className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 text-[#0F172A]"
+                              aria-hidden="true"
+                            />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </motion.section>
+            ) : (
+              <motion.section
+                key={currentQuestion.id}
+                initial={
+                  swipeSlideDir === 'next'
+                    ? { x: 34, opacity: 0.65 }
+                    : swipeSlideDir === 'prev'
+                      ? { x: -34, opacity: 0.65 }
+                      : false
+                }
+                animate={{ x: swipeOffset, opacity: 1 }}
+                transition={
+                  swipeOffset !== 0
+                    ? { duration: 0 }
+                    : { duration: 0.18, ease: 'easeOut' }
+                }
+                onAnimationComplete={() => {
+                  if (swipeOffset === 0 && swipeSlideDir !== null) {
+                    setSwipeSlideDir(null);
+                  }
+                }}
+                className="mx-auto w-full max-w-3xl rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3 sm:p-5 shadow-xs"
+              >
+                {effectiveLanguage === 'hi' && !hasHindiForCurrent && (
+                  <div className="mb-2 inline-flex items-center rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
+                    Hindi translation unavailable for this question — showing English
+                  </div>
+                )}
+
+                <h2 className="text-[13.5px] sm:text-base font-semibold leading-snug sm:leading-relaxed text-[#0F172A] whitespace-pre-line">
+                  {displayedQuestionText}
+                </h2>
+
+                {/* Question Diagram / Chart / Figure Image */}
+                {currentQuestion.imageUrl && (
+                  <div className="mt-2 flex justify-center rounded-lg border border-slate-200 bg-white p-1.5 sm:p-2">
+                    <img
+                      src={currentQuestion.imageUrl}
+                      alt="Question diagram"
+                      className="max-h-36 sm:max-h-56 w-auto max-w-full object-contain grayscale contrast-[1.45] brightness-[1.12] mix-blend-multiply"
+                    />
+                  </div>
+                )}
+
+                {/* Structured Number Matrix (e.g., Q15 / Q22) */}
+                {currentQuestion.matrix && currentQuestion.matrix.length > 0 && (
+                  <div className="mt-2.5 inline-block max-w-full overflow-x-auto rounded-lg border border-slate-300 bg-[#F8FAFC] shadow-2xs">
+                    <table className="border-collapse text-center font-mono text-xs sm:text-sm font-bold text-[#0F172A] tabular-nums">
+                      <tbody>
+                        {currentQuestion.matrix.map((row, rIdx) => (
+                          <tr
+                            key={rIdx}
+                            className="divide-x divide-slate-300 border-b border-slate-300 last:border-b-0"
+                          >
+                            {row.map((cell, cIdx) => (
+                              <td
+                                key={cIdx}
+                                className={`h-7 sm:h-9 min-w-[2.5rem] sm:min-w-[3.25rem] px-1.5 sm:px-2 ${
+                                  cell === '?' ? 'bg-amber-100/80 text-[#1E3A8A]' : 'bg-white'
+                                }`}
+                              >
+                                {cell}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* Compact 4 Option Selection Cards (2x2 grid for figure options, vertical stack for text options) */}
+                <div
+                  className={
+                    currentQuestion.optionImages
+                      ? 'mt-2.5 sm:mt-4 grid grid-cols-2 gap-2 sm:gap-2.5'
+                      : 'mt-2.5 sm:mt-4 space-y-1.5 sm:space-y-2.5'
+                  }
+                  role="radiogroup"
+                  aria-label="Answer options"
+                >
+                  {OPTION_LETTERS.map((letter, idx) => {
+                    const optionIdx = idx as OptionIndex;
+                    const isSelected = currentResponse?.selectedIndex === optionIdx;
+                    const optText = displayedOptions[optionIdx];
+                    const optImg = currentQuestion.optionImages?.[optionIdx];
+
+                    return (
+                      <button
+                        key={letter}
+                        type="button"
+                        role="radio"
+                        aria-checked={isSelected}
+                        onClick={() => handleSelectOption(optionIdx)}
+                        className={`group flex w-full ${
+                          optImg ? 'min-h-[68px] sm:min-h-[82px]' : 'min-h-[42px] sm:min-h-[50px]'
+                        } items-center justify-between gap-2 rounded-xl border px-2.5 py-2 sm:px-4 sm:py-3 text-left transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F172A] ${
+                          isSelected
+                            ? 'border-[#0F172A] bg-amber-50/85 text-[#0F172A] ring-1 ring-[#0F172A] shadow-xs'
+                            : 'border-slate-200 bg-white text-slate-800 hover:border-slate-300 hover:bg-slate-50/80'
+                        }`}
+                      >
+                        <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
                           <span
-                            className={`text-[13px] sm:text-sm leading-snug ${
-                              isSelected ? 'font-bold text-[#0F172A]' : 'font-medium'
+                            className={`flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg font-mono text-xs font-bold transition-colors ${
+                              isSelected
+                                ? 'bg-[#0F172A] text-[#F59E0B]'
+                                : 'bg-slate-100 text-slate-700 group-hover:bg-slate-200/80'
                             }`}
                           >
-                            {optText}
+                            {letter}
                           </span>
-                        )}
-                      </div>
 
-                      {isSelected && (
-                        <CheckCircle2
-                          className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 text-[#0F172A]"
-                          aria-hidden="true"
-                        />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </motion.section>
+                          {optImg ? (
+                            <div className="flex min-w-0 flex-1 items-center justify-center rounded-md bg-white p-1">
+                              <img
+                                src={optImg}
+                                alt={`Option ${letter}`}
+                                className="max-h-14 sm:max-h-20 w-auto max-w-full object-contain grayscale contrast-[1.45] brightness-[1.12] mix-blend-multiply"
+                              />
+                            </div>
+                          ) : (
+                            <span
+                              className={`text-[13px] sm:text-sm leading-snug ${
+                                isSelected ? 'font-bold text-[#0F172A]' : 'font-medium'
+                              }`}
+                            >
+                              {optText}
+                            </span>
+                          )}
+                        </div>
+
+                        {isSelected && (
+                          <CheckCircle2
+                            className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 text-[#0F172A]"
+                            aria-hidden="true"
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </motion.section>
+            )}
           </div>
 
           {/* Pinned Bottom CBT Action Bar */}

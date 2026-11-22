@@ -319,8 +319,7 @@ export function HomeDashboard({
                 SSC Sathi
               </h1>
               <p className="mt-0.5 text-xs sm:text-sm font-medium text-slate-600 leading-snug">
-                Free online SSC CGL, CHSL, MTS &amp; Railway PYQ mock test platform with real CBT
-                exam interface, live timer, and instant bilingual solutions.
+                India&apos;s Cleanest Mock Portal for CGL, CHSL &amp; MTS
               </p>
             </div>
           </div>

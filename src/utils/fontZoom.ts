@@ -2,7 +2,7 @@ export const FONT_ZOOM_STEPS = [85, 90, 100, 110, 120, 130, 140] as const;
 export type FontZoomLevel = (typeof FONT_ZOOM_STEPS)[number];
 
 export const DEFAULT_FONT_ZOOM: FontZoomLevel = 100;
-const FONT_ZOOM_STORAGE_KEY = 'ssc_sathi_exam_font_zoom';
+const FONT_ZOOM_STORAGE_KEY = 'ssc_sathi_exam_font_zoom_v2';
 
 export function loadSavedFontZoom(): FontZoomLevel {
   try {
@@ -34,68 +34,68 @@ export function stepFontZoom(current: FontZoomLevel, delta: -1 | 1): FontZoomLev
 }
 
 // Static Tailwind font-size classes for smooth, zero-inline-style scaling
-// Standard Question: 18px base (leading 1.6)
+// Standard Question: 15px base at 100% (compact default, leading 1.6)
 export const QUESTION_FONT_CLASS: Record<FontZoomLevel, string> = {
-  85: 'text-[15.5px]',
-  90: 'text-[16.2px]',
-  100: 'text-[18px]',
-  110: 'text-[19.8px]',
-  120: 'text-[21.6px]',
-  130: 'text-[23.4px]',
-  140: 'text-[25.2px]',
+  85: 'text-[13px]',
+  90: 'text-[13.5px]',
+  100: 'text-[15px]',
+  110: 'text-[16.5px]',
+  120: 'text-[18px]',
+  130: 'text-[19.5px]',
+  140: 'text-[21px]',
 };
 
-// Standard Option: 16.5px base (comfortable 16px-17px target)
+// Standard Option: 14px base at 100%
 export const OPTION_FONT_CLASS: Record<FontZoomLevel, string> = {
-  85: 'text-[14px]',
-  90: 'text-[15px]',
-  100: 'text-[16.5px]',
-  110: 'text-[18px]',
-  120: 'text-[19.8px]',
-  130: 'text-[21.5px]',
-  140: 'text-[23px]',
+  85: 'text-[12px]',
+  90: 'text-[12.6px]',
+  100: 'text-[14px]',
+  110: 'text-[15.4px]',
+  120: 'text-[16.8px]',
+  130: 'text-[18.2px]',
+  140: 'text-[19.6px]',
 };
 
-// Passage Split-View: Reading Passage body (16px base, leading 1.65)
+// Passage Split-View: Reading Passage body (14px base at 100%, leading 1.65)
 export const PASSAGE_BODY_FONT_CLASS: Record<FontZoomLevel, string> = {
-  85: 'text-[13.6px]',
-  90: 'text-[14.4px]',
-  100: 'text-[16px]',
-  110: 'text-[17.6px]',
-  120: 'text-[19.2px]',
-  130: 'text-[20.8px]',
-  140: 'text-[22.4px]',
+  85: 'text-[12px]',
+  90: 'text-[12.6px]',
+  100: 'text-[14px]',
+  110: 'text-[15.4px]',
+  120: 'text-[16.8px]',
+  130: 'text-[18.2px]',
+  140: 'text-[19.6px]',
 };
 
-// Passage Split-View: Bottom Question Prompt (16.5px base)
+// Passage Split-View: Bottom Question Prompt (14.5px base at 100%)
 export const PASSAGE_QUESTION_FONT_CLASS: Record<FontZoomLevel, string> = {
-  85: 'text-[14px]',
-  90: 'text-[15px]',
-  100: 'text-[16.5px]',
-  110: 'text-[18px]',
-  120: 'text-[19.8px]',
-  130: 'text-[21.5px]',
-  140: 'text-[23px]',
+  85: 'text-[12.5px]',
+  90: 'text-[13px]',
+  100: 'text-[14.5px]',
+  110: 'text-[16px]',
+  120: 'text-[17.4px]',
+  130: 'text-[18.8px]',
+  140: 'text-[20.3px]',
 };
 
-// Passage Split-View: Bottom Option Row (15.5px base)
+// Passage Split-View: Bottom Option Row (13.5px base at 100%)
 export const PASSAGE_OPTION_FONT_CLASS: Record<FontZoomLevel, string> = {
-  85: 'text-[13.2px]',
-  90: 'text-[14px]',
-  100: 'text-[15.5px]',
-  110: 'text-[17px]',
-  120: 'text-[18.6px]',
-  130: 'text-[20px]',
-  140: 'text-[21.7px]',
+  85: 'text-[11.5px]',
+  90: 'text-[12.2px]',
+  100: 'text-[13.5px]',
+  110: 'text-[14.8px]',
+  120: 'text-[16.2px]',
+  130: 'text-[17.5px]',
+  140: 'text-[19px]',
 };
 
-// Solutions Explanation text (15.5px base)
+// Solutions Explanation text (14px base at 100%)
 export const EXPLANATION_FONT_CLASS: Record<FontZoomLevel, string> = {
-  85: 'text-[13.2px]',
-  90: 'text-[14px]',
-  100: 'text-[15.5px]',
-  110: 'text-[17px]',
-  120: 'text-[18.6px]',
-  130: 'text-[20px]',
-  140: 'text-[21.7px]',
+  85: 'text-[12px]',
+  90: 'text-[12.6px]',
+  100: 'text-[14px]',
+  110: 'text-[15.4px]',
+  120: 'text-[16.8px]',
+  130: 'text-[18.2px]',
+  140: 'text-[19.6px]',
 };

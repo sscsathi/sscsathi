@@ -15,6 +15,7 @@ import {
   TestCategory,
 } from '../types/exam';
 import { parseBulkQuestions } from '../utils/storage';
+import { MathText } from './MathText';
 
 interface QuestionBuilderPanelProps {
   existingTests: MockTest[];
@@ -562,7 +563,7 @@ export function QuestionBuilderPanel({
                 >
                   <div className="min-w-0">
                     <div className="font-semibold text-[#0F172A]">
-                      Q{idx + 1}. {q.questionEn}
+                      Q{idx + 1}. <MathText text={q.questionEn} />
                     </div>
                     <div className="mt-1 text-slate-600">
                       Topic: {q.topic} · Correct: Option{' '}

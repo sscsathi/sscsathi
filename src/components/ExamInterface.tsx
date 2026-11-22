@@ -24,6 +24,7 @@ import {
   QuestionStatus,
 } from '../types/exam';
 import { calculateExamResult, formatTimer } from '../utils/scoring';
+import { MathText } from './MathText';
 import { PaletteSymbol, toPaletteVisualState } from './PaletteSymbol';
 
 interface ExamInterfaceProps {
@@ -932,7 +933,7 @@ export function ExamInterface({
                 {/* Bottom Panel (shrink-0 h-auto): Auto-fits Question Prompt & 4 Tight Option Buttons with Zero Empty Space */}
                 <div className="shrink-0 h-auto max-h-[55%] overflow-y-auto touch-pan-y border-t-2 border-slate-200 bg-white p-2.5 sm:px-4 sm:py-3 shadow-[0_-4px_12px_-6px_rgba(15,23,42,0.1)]">
                   <h2 className="text-[13px] sm:text-sm font-semibold leading-snug text-[#0F172A] whitespace-pre-line">
-                    {displayedQuestionText}
+                    <MathText text={displayedQuestionText} />
                   </h2>
 
                   <div
@@ -973,7 +974,7 @@ export function ExamInterface({
                                 isSelected ? 'font-bold text-[#0F172A]' : 'font-medium'
                               }`}
                             >
-                              {optText}
+                              <MathText text={optText} />
                             </span>
                           </div>
 
@@ -1019,7 +1020,7 @@ export function ExamInterface({
                 )}
 
                 <h2 className="text-[13.5px] sm:text-base font-semibold leading-snug sm:leading-relaxed text-[#0F172A] whitespace-pre-line">
-                  {displayedQuestionText}
+                  <MathText text={displayedQuestionText} />
                 </h2>
 
                 {/* Question Diagram / Chart / Figure Image */}
@@ -1116,7 +1117,7 @@ export function ExamInterface({
                                 isSelected ? 'font-bold text-[#0F172A]' : 'font-medium'
                               }`}
                             >
-                              {optText}
+                              <MathText text={optText} />
                             </span>
                           )}
                         </div>

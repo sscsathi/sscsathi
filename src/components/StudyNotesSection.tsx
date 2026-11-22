@@ -17,6 +17,7 @@ import {
   StudyNoteItem,
   StudySubjectId,
 } from '../data/studyNotes';
+import { MathText } from './MathText';
 
 const TELEGRAM_CHANNEL_URL = 'https://t.me/ssc_sathi';
 
@@ -285,7 +286,9 @@ export function StudyNotesSection() {
                     {section.points.map((pt, idx) => (
                       <li key={idx} className="flex items-start gap-2.5">
                         <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#F59E0B]" aria-hidden="true" />
-                        <span>{pt}</span>
+                        <span>
+                          <MathText text={pt} />
+                        </span>
                       </li>
                     ))}
                   </ul>

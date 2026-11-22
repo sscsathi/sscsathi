@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { ExamResult, MockTest, OptionIndex, QuestionLanguage } from '../types/exam';
 import { estimatePercentile, formatDurationVerbose } from '../utils/scoring';
+import { MathText } from './MathText';
 
 interface ResultScreenProps {
   result: ExamResult;
@@ -758,7 +759,9 @@ export function ResultScreen({
                         )}
 
                         <h3 className="mt-4 text-base font-semibold text-[#0F172A] leading-relaxed whitespace-pre-line">
-                          {solutionLang === 'hi' && q.questionHi ? q.questionHi : q.questionEn}
+                          <MathText
+                            text={solutionLang === 'hi' && q.questionHi ? q.questionHi : q.questionEn}
+                          />
                         </h3>
 
                         {q.imageUrl && (
@@ -833,7 +836,9 @@ export function ResultScreen({
                                       />
                                     </div>
                                   ) : (
-                                    <span className="font-medium">{optText}</span>
+                                    <span className="font-medium">
+                                      <MathText text={optText} />
+                                    </span>
                                   )}
                                 </div>
 
@@ -857,9 +862,13 @@ export function ResultScreen({
                               : 'Solution Explanation'}
                           </div>
                           <p className="mt-1.5 leading-relaxed whitespace-pre-line">
-                            {solutionLang === 'hi' && q.explanationHi
-                              ? q.explanationHi
-                              : q.explanationEn}
+                            <MathText
+                              text={
+                                solutionLang === 'hi' && q.explanationHi
+                                  ? q.explanationHi
+                                  : q.explanationEn
+                              }
+                            />
                           </p>
                         </div>
                       </article>

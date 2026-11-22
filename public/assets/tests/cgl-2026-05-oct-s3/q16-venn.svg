@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 280" width="420" height="280">
+  <rect width="420" height="280" fill="#FFFFFF"/>
+  <!-- Triangle: Educated women -->
+  <polygon points="168,22 48,182 286,182" fill="none" stroke="#0F172A" stroke-width="2.4" stroke-linejoin="round"/>
+  <!-- Small circle: Backward women -->
+  <circle cx="145" cy="195" r="68" fill="none" stroke="#0F172A" stroke-width="2.4"/>
+  <!-- Big circle: Employed women -->
+  <circle cx="268" cy="168" r="92" fill="none" stroke="#0F172A" stroke-width="2.4"/>
+
+  <!-- Numbers in each distinct region -->
+  <g font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="700" fill="#0F172A" text-anchor="middle" dominant-baseline="central">
+    <text x="168" y="88">16</text>
+    <text x="134" y="158">22</text>
+    <text x="195" y="160">6</text>
+    <text x="223" y="132">12</text>
+    <text x="130" y="224">34</text>
+    <text x="195" y="210">10</text>
+    <text x="304" y="202">14</text>
+  </g>
+</svg>

@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 236" width="420" height="236">
+  <rect width="420" height="236" fill="#FFFFFF"/>
+  <!-- Unfolded Cube Net -->
+  <g transform="translate(90, 14)" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="700" fill="#0F172A" text-anchor="middle" dominant-baseline="central">
+    <!-- Row 0: cols 2, 3, 4 = D, B, E -->
+    <rect x="88" y="0" width="44" height="44" fill="#FFFFFF" stroke="#0F172A" stroke-width="2.2"/>
+    <text x="110" y="23">D</text>
+    <rect x="132" y="0" width="44" height="44" fill="#FFFFFF" stroke="#0F172A" stroke-width="2.2"/>
+    <text x="154" y="23">B</text>
+    <rect x="176" y="0" width="44" height="44" fill="#FFFFFF" stroke="#0F172A" stroke-width="2.2"/>
+    <text x="198" y="23">E</text>
+    <!-- Row 1: cols 0, 1, 2 = A, F, C -->
+    <rect x="0" y="44" width="44" height="44" fill="#FFFFFF" stroke="#0F172A" stroke-width="2.2"/>
+    <text x="22" y="67">A</text>
+    <rect x="44" y="44" width="44" height="44" fill="#FFFFFF" stroke="#0F172A" stroke-width="2.2"/>
+    <text x="66" y="67">F</text>
+    <rect x="88" y="44" width="44" height="44" fill="#FFFFFF" stroke="#0F172A" stroke-width="2.2"/>
+    <text x="110" y="67">C</text>
+  </g>
+
+  <!-- 4 Folded Cubes -->
+  <!-- Cube 1: Top B, Front A, Right C -->
+  <g transform="translate(36, 126)" font-family="system-ui, -apple-system, sans-serif" fill="#0F172A" text-anchor="middle">
+    <polygon points="0,20 18,4 62,4 44,20" fill="#F8FAFC" stroke="#0F172A" stroke-width="2" stroke-linejoin="round"/>
+    <rect x="0" y="20" width="44" height="46" fill="#FFFFFF" stroke="#0F172A" stroke-width="2" stroke-linejoin="round"/>
+    <polygon points="44,20 62,4 62,50 44,66" fill="#F1F5F9" stroke="#0F172A" stroke-width="2" stroke-linejoin="round"/>
+    <text x="31" y="16" font-size="14" font-weight="700">B</text>
+    <text x="22" y="49" font-size="17" font-weight="700">A</text>
+    <text x="53" y="41" font-size="15" font-weight="700">C</text>
+    <text x="26" y="88" font-size="15" font-weight="700">1</text>
+  </g>
+
+  <!-- Cube 2: Top D, Front E, Right F -->
+  <g transform="translate(130, 126)" font-family="system-ui, -apple-system, sans-serif" fill="#0F172A" text-anchor="middle">
+    <polygon points="0,20 18,4 62,4 44,20" fill="#F8FAFC" stroke="#0F172A" stroke-width="2" stroke-linejoin="round"/>
+    <rect x="0" y="20" width="44" height="46" fill="#FFFFFF" stroke="#0F172A" stroke-width="2" stroke-linejoin="round"/>
+    <polygon points="44,20 62,4 62,50 44,66" fill="#F1F5F9" stroke="#0F172A" stroke-width="2" stroke-linejoin="round"/>
+    <text x="31" y="16" font-size="14" font-weight="700">D</text>
+    <text x="22" y="49" font-size="17" font-weight="700">E</text>
+    <text x="53" y="41" font-size="15" font-weight="700">F</text>
+    <text x="26" y="88" font-size="15" font-weight="700">2</text>
+  </g>
+
+  <!-- Cube 3: Top D, Front C, Right E -->
+  <g transform="translate(224, 126)" font-family="system-ui, -apple-system, sans-serif" fill="#0F172A" text-anchor="middle">
+    <polygon points="0,20 18,4 62,4 44,20" fill="#F8FAFC" stroke="#0F172A" stroke-width="2" stroke-linejoin="round"/>
+    <rect x="0" y="20" width="44" height="46" fill="#FFFFFF" stroke="#0F172A" stroke-width="2" stroke-linejoin="round"/>
+    <polygon points="44,20 62,4 62,50 44,66" fill="#F1F5F9" stroke="#0F172A" stroke-width="2" stroke-linejoin="round"/>
+    <text x="31" y="16" font-size="14" font-weight="700">D</text>
+    <text x="22" y="49" font-size="17" font-weight="700">C</text>
+    <text x="53" y="41" font-size="15" font-weight="700">E</text>
+    <text x="26" y="88" font-size="15" font-weight="700">3</text>
+  </g>
+
+  <!-- Cube 4: Top F, Front B, Right D -->
+  <g transform="translate(318, 126)" font-family="system-ui, -apple-system, sans-serif" fill="#0F172A" text-anchor="middle">
+    <polygon points="0,20 18,4 62,4 44,20" fill="#F8FAFC" stroke="#0F172A" stroke-width="2" stroke-linejoin="round"/>
+    <rect x="0" y="20" width="44" height="46" fill="#FFFFFF" stroke="#0F172A" stroke-width="2" stroke-linejoin="round"/>
+    <polygon points="44,20 62,4 62,50 44,66" fill="#F1F5F9" stroke="#0F172A" stroke-width="2" stroke-linejoin="round"/>
+    <text x="31" y="16" font-size="14" font-weight="700">F</text>
+    <text x="22" y="49" font-size="17" font-weight="700">B</text>
+    <text x="53" y="41" font-size="15" font-weight="700">D</text>
+    <text x="26" y="88" font-size="15" font-weight="700">4</text>
+  </g>
+</svg>

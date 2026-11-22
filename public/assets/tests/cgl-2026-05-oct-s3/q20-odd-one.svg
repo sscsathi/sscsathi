@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 132" width="440" height="132">
+  <rect width="440" height="132" fill="#FFFFFF"/>
+  <!-- (A): Sector facing LEFT (135° to 225°), dot in TOP half (clockwise from bisector) [ODD ONE OUT] -->
+  <g transform="translate(12, 10)">
+    <rect x="0" y="0" width="98" height="92" fill="#FFFFFF" stroke="#64748B" stroke-width="1.6"/>
+    <circle cx="49" cy="46" r="32" fill="none" stroke="#0F172A" stroke-width="2.2"/>
+    <line x1="49" y1="46" x2="26.4" y2="23.4" stroke="#0F172A" stroke-width="2"/>
+    <line x1="49" y1="46" x2="17" y2="46" stroke="#0F172A" stroke-width="2"/>
+    <line x1="49" y1="46" x2="26.4" y2="68.6" stroke="#0F172A" stroke-width="2"/>
+    <circle cx="32" cy="39" r="3.4" fill="none" stroke="#0F172A" stroke-width="1.9"/>
+    <text x="49" y="114" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="700" fill="#0F172A">(A)</text>
+  </g>
+  <!-- (B): Sector facing UP (225° to 315°), dot in LEFT half (CCW from bisector) -->
+  <g transform="translate(118, 10)">
+    <rect x="0" y="0" width="98" height="92" fill="#FFFFFF" stroke="#64748B" stroke-width="1.6"/>
+    <circle cx="49" cy="46" r="32" fill="none" stroke="#0F172A" stroke-width="2.2"/>
+    <line x1="49" y1="46" x2="26.4" y2="23.4" stroke="#0F172A" stroke-width="2"/>
+    <line x1="49" y1="46" x2="49" y2="14" stroke="#0F172A" stroke-width="2"/>
+    <line x1="49" y1="46" x2="71.6" y2="23.4" stroke="#0F172A" stroke-width="2"/>
+    <circle cx="41" cy="28" r="3.4" fill="none" stroke="#0F172A" stroke-width="1.9"/>
+    <text x="49" y="114" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="700" fill="#0F172A">(B)</text>
+  </g>
+  <!-- (C): Sector facing RIGHT (315° to 45°), dot in TOP half (CCW from bisector) -->
+  <g transform="translate(224, 10)">
+    <rect x="0" y="0" width="98" height="92" fill="#FFFFFF" stroke="#64748B" stroke-width="1.6"/>
+    <circle cx="49" cy="46" r="32" fill="none" stroke="#0F172A" stroke-width="2.2"/>
+    <line x1="49" y1="46" x2="71.6" y2="23.4" stroke="#0F172A" stroke-width="2"/>
+    <line x1="49" y1="46" x2="81" y2="46" stroke="#0F172A" stroke-width="2"/>
+    <line x1="49" y1="46" x2="71.6" y2="68.6" stroke="#0F172A" stroke-width="2"/>
+    <circle cx="67" cy="39" r="3.4" fill="none" stroke="#0F172A" stroke-width="1.9"/>
+    <text x="49" y="114" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="700" fill="#0F172A">(C)</text>
+  </g>
+  <!-- (D): Sector facing UP-RIGHT (270° to 360°), dot in UPPER-LEFT half (CCW from bisector) -->
+  <g transform="translate(330, 10)">
+    <rect x="0" y="0" width="98" height="92" fill="#FFFFFF" stroke="#64748B" stroke-width="1.6"/>
+    <circle cx="49" cy="46" r="32" fill="none" stroke="#0F172A" stroke-width="2.2"/>
+    <line x1="49" y1="46" x2="49" y2="14" stroke="#0F172A" stroke-width="2"/>
+    <line x1="49" y1="46" x2="71.6" y2="23.4" stroke="#0F172A" stroke-width="2"/>
+    <line x1="49" y1="46" x2="81" y2="46" stroke="#0F172A" stroke-width="2"/>
+    <circle cx="56" cy="27" r="3.4" fill="none" stroke="#0F172A" stroke-width="1.9"/>
+    <text x="49" y="114" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="700" fill="#0F172A">(D)</text>
+  </g>
+</svg>

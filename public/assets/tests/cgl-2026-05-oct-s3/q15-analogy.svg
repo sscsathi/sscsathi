@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 228" width="460" height="228">
+  <rect width="460" height="228" fill="#FFFFFF"/>
+  <!-- Image X -->
+  <text x="16" y="18" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#0F172A">Image X:</text>
+  <!-- Box 1: Square with upright hollow triangle inside -->
+  <rect x="16" y="26" width="76" height="72" fill="#FFFFFF" stroke="#334155" stroke-width="1.8"/>
+  <rect x="34" y="42" width="40" height="40" fill="none" stroke="#0F172A" stroke-width="2"/>
+  <polygon points="54,50 42,74 66,74" fill="none" stroke="#0F172A" stroke-width="1.9" stroke-linejoin="round"/>
+  <!-- : -->
+  <circle cx="105" cy="54" r="2.2" fill="#0F172A"/>
+  <circle cx="105" cy="70" r="2.2" fill="#0F172A"/>
+  <!-- Box 2: Large upright hollow triangle with filled small square inside -->
+  <rect x="118" y="26" width="76" height="72" fill="#FFFFFF" stroke="#334155" stroke-width="1.8"/>
+  <polygon points="156,36 130,86 182,86" fill="none" stroke="#0F172A" stroke-width="2" stroke-linejoin="round"/>
+  <rect x="148" y="65" width="16" height="16" fill="#475569" stroke="#0F172A" stroke-width="1.4"/>
+  <!-- :: -->
+  <circle cx="206" cy="54" r="2.2" fill="#0F172A"/>
+  <circle cx="206" cy="70" r="2.2" fill="#0F172A"/>
+  <circle cx="215" cy="54" r="2.2" fill="#0F172A"/>
+  <circle cx="215" cy="70" r="2.2" fill="#0F172A"/>
+  <!-- Box 3: Square with inverted hollow triangle inside -->
+  <rect x="228" y="26" width="76" height="72" fill="#FFFFFF" stroke="#334155" stroke-width="1.8"/>
+  <rect x="246" y="42" width="40" height="40" fill="none" stroke="#0F172A" stroke-width="2"/>
+  <polygon points="254,52 278,52 266,74" fill="none" stroke="#0F172A" stroke-width="1.9" stroke-linejoin="round"/>
+  <!-- : ? -->
+  <circle cx="318" cy="54" r="2.2" fill="#0F172A"/>
+  <circle cx="318" cy="70" r="2.2" fill="#0F172A"/>
+  <text x="340" y="72" font-family="system-ui, -apple-system, sans-serif" font-size="30" font-weight="700" fill="#334155">?</text>
+
+  <!-- Image Y -->
+  <text x="16" y="122" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#0F172A">Image Y:</text>
+  <!-- Option (1): Large upright triangle with hollow small square -->
+  <rect x="16" y="130" width="84" height="72" fill="#FFFFFF" stroke="#334155" stroke-width="1.8"/>
+  <polygon points="58,140 32,190 84,190" fill="none" stroke="#0F172A" stroke-width="2" stroke-linejoin="round"/>
+  <rect x="50" y="169" width="16" height="16" fill="none" stroke="#0F172A" stroke-width="1.8"/>
+  <text x="58" y="220" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#0F172A">(1)</text>
+
+  <!-- Option (2): Large inverted triangle with hollow small square -->
+  <rect x="114" y="130" width="84" height="72" fill="#FFFFFF" stroke="#334155" stroke-width="1.8"/>
+  <polygon points="130,142 182,142 156,192" fill="none" stroke="#0F172A" stroke-width="2" stroke-linejoin="round"/>
+  <rect x="148" y="148" width="16" height="16" fill="none" stroke="#0F172A" stroke-width="1.8"/>
+  <text x="156" y="220" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#0F172A">(2)</text>
+
+  <!-- Option (3): Large inverted triangle with filled small square -->
+  <rect x="212" y="130" width="84" height="72" fill="#FFFFFF" stroke="#334155" stroke-width="1.8"/>
+  <polygon points="228,142 280,142 254,192" fill="none" stroke="#0F172A" stroke-width="2" stroke-linejoin="round"/>
+  <rect x="246" y="148" width="16" height="16" fill="#475569" stroke="#0F172A" stroke-width="1.4"/>
+  <text x="254" y="220" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#0F172A">(3)</text>
+
+  <!-- Option (4): Large inverted triangle with hollow upright triangle -->
+  <rect x="310" y="130" width="84" height="72" fill="#FFFFFF" stroke="#334155" stroke-width="1.8"/>
+  <polygon points="326,142 378,142 352,192" fill="none" stroke="#0F172A" stroke-width="2" stroke-linejoin="round"/>
+  <polygon points="352,147 342,166 362,166" fill="none" stroke="#0F172A" stroke-width="1.8" stroke-linejoin="round"/>
+  <text x="352" y="220" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#0F172A">(4)</text>
+</svg>

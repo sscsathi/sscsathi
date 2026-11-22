@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 258" width="460" height="258">
+  <rect width="460" height="258" fill="#FFFFFF"/>
+  <!-- Image X -->
+  <text x="16" y="18" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#0F172A">Image X:</text>
+
+  <!-- Step (1): Square folded left & right thirds inward -->
+  <g transform="translate(22, 28)">
+    <rect x="0" y="0" width="72" height="72" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+    <line x1="24" y1="0" x2="24" y2="72" stroke="#0F172A" stroke-width="1.8" stroke-dasharray="4 3"/>
+    <line x1="48" y1="0" x2="48" y2="72" stroke="#0F172A" stroke-width="1.8" stroke-dasharray="4 3"/>
+    <!-- Left-to-center curved arrow -->
+    <path d="M 13 38 Q 22 30 31 38" fill="none" stroke="#0F172A" stroke-width="1.8" stroke-linecap="round"/>
+    <polyline points="26,33 32,38 25,40" fill="none" stroke="#0F172A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Right-to-center curved arrow -->
+    <path d="M 59 38 Q 50 30 41 38" fill="none" stroke="#0F172A" stroke-width="1.8" stroke-linecap="round"/>
+    <polyline points="46,33 40,38 47,40" fill="none" stroke="#0F172A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="36" y="92" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="700" fill="#0F172A">(1)</text>
+  </g>
+
+  <!-- Step (2): Vertical strip folded top-to-bottom -->
+  <g transform="translate(136, 28)">
+    <rect x="0" y="0" width="72" height="72" fill="none" stroke="#0F172A" stroke-width="1.8" stroke-dasharray="4 3"/>
+    <rect x="24" y="0" width="24" height="72" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+    <line x1="24" y1="36" x2="48" y2="36" stroke="#0F172A" stroke-width="1.6" stroke-dasharray="4 3"/>
+    <path d="M 35 23 Q 44 36 35 49" fill="none" stroke="#0F172A" stroke-width="1.8" stroke-linecap="round"/>
+    <polyline points="32,44 35,50 40,46" fill="none" stroke="#0F172A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="36" y="92" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="700" fill="#0F172A">(2)</text>
+  </g>
+
+  <!-- Step (3): Bottom-center folded rectangle with left-pointing triangle & bottom arch notch -->
+  <g transform="translate(250, 28)">
+    <rect x="0" y="0" width="72" height="72" fill="none" stroke="#0F172A" stroke-width="1.8" stroke-dasharray="4 3"/>
+    <line x1="24" y1="0" x2="24" y2="36" stroke="#0F172A" stroke-width="1.6" stroke-dasharray="4 3"/>
+    <line x1="48" y1="0" x2="48" y2="36" stroke="#0F172A" stroke-width="1.6" stroke-dasharray="4 3"/>
+    <rect x="24" y="36" width="24" height="36" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+    <!-- Left-pointing triangle cut -->
+    <polygon points="30,47 42,41 42,53" fill="none" stroke="#0F172A" stroke-width="1.8" stroke-linejoin="round"/>
+    <!-- Bottom arch notch cut -->
+    <path d="M 31 72 L 31 62 A 5 5 0 0 1 41 62 L 41 72" fill="none" stroke="#0F172A" stroke-width="1.8"/>
+    <text x="36" y="92" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="700" fill="#0F172A">(3)</text>
+  </g>
+
+  <!-- Image Y -->
+  <text x="16" y="146" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#0F172A">Image Y:</text>
+
+  <!-- Option (A): Side arches (left/right) + center top/bottom arch; triangles > < > -->
+  <g transform="translate(22, 156)">
+    <path d="M 0,0 L 29,0 L 29,10 A 7,7 0 0 0 43,10 L 43,0 L 72,0 L 72,7 L 60,7 A 6,6 0 0 0 60,19 L 72,19 L 72,53 L 60,53 A 6,6 0 0 0 60,65 L 72,65 L 72,72 L 43,72 L 43,62 A 7,7 0 0 0 29,62 L 29,72 L 0,72 L 0,65 L 12,65 A 6,6 0 0 0 12,53 L 0,53 L 0,19 L 12,19 A 6,6 0 0 0 12,7 L 0,7 Z" fill="#FFFFFF" stroke="#0F172A" stroke-width="2" stroke-linejoin="round"/>
+    <!-- Row 1: > < > -->
+    <polygon points="8,24 19,30 8,35" fill="none" stroke="#0F172A" stroke-width="1.7" stroke-linejoin="round"/>
+    <polygon points="31,30 42,24 42,35" fill="none" stroke="#0F172A" stroke-width="1.7" stroke-linejoin="round"/>
+    <polygon points="53,24 64,30 53,35" fill="none" stroke="#0F172A" stroke-width="1.7" stroke-linejoin="round"/>
+    <!-- Row 2: > < > -->
+    <polygon points="8,38 19,43 8,49" fill="none" stroke="#0F172A" stroke-width="1.7" stroke-linejoin="round"/>
+    <polygon points="31,43 42,38 42,49" fill="none" stroke="#0F172A" stroke-width="1.7" stroke-linejoin="round"/>
+    <polygon points="53,38 64,43 53,49" fill="none" stroke="#0F172A" stroke-width="1.7" stroke-linejoin="round"/>
+    <text x="36" y="92" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#0F172A">(A)</text>
+  </g>
+
+  <!-- Option (B): Side arches + center top/bottom arch; triangles < < < -->
+  <g transform="translate(132, 156)">
+    <path d="M 0,0 L 29,0 L 29,10 A 7,7 0 0 0 43,10 L 43,0 L 72,0 L 72,7 L 60,7 A 6,6 0 0 0 60,19 L 72,19 L 72,53 L 60,53 A 6,6 0 0 0 60,65 L 72,65 L 72,72 L 43,72 L 43,62 A 7,7 0 0 0 29,62 L 29,72 L 0,72 L 0,65 L 12,65 A 6,6 0 0 0 12,53 L 0,53 L 0,19 L 12,19 A 6,6 0 0 0 12,7 L 0,7 Z" fill="#FFFFFF" stroke="#0F172A" stroke-width="2" stroke-linejoin="round"/>
+    <!-- Row 1: < < < -->
+    <polygon points="8,30 19,24 19,35" fill="none" stroke="#0F172A" stroke-width="1.7" stroke-linejoin="round"/>
+    <polygon points="31,30 42,24 42,35" fill="none" stroke="#0F172A" stroke-width="1.7" stroke-linejoin="round"/>
+    <polygon points="53,30 64,24 64,35" fill="none" stroke="#0F172A" stroke-width="1.7" stroke-linejoin="round"/>
+    <!-- Row 2: < < < -->
+    <polygon points="8,43 19,38 19,49" fill="none" stroke="#0F172A" stroke-width="1.7" stroke-linejoin="round"/>
+    <polygon points="31,43 42,38 42,49" fill="none" stroke="#0F172A" stroke-width="1.7" stroke-linejoin="round"/>
+    <polygon points="53,43 64,38 64,49" fill="none" stroke="#0F172A" stroke-width="1.7" stroke-linejoin="round"/>
+    <text x="36" y="92" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#0F172A">(B)</text>
+  </g>
+
+  <!-- Option (C) [CORRECT]: 3 arches on top & 3 arches on bottom; triangles > < > -->
+  <g transform="translate(242, 156)">
+    <path d="M 0,0 L 6,0 L 6,11 A 6,6 0 0 0 18,11 L 18,0 L 30,0 L 30,11 A 6,6 0 0 0 42,11 L 42,0 L 54,0 L 54,11 A 6,6 0 0 0 66,11 L 66,0 L 72,0 L 72,72 L 66,72 L 66,61 A 6,6 0 0 0 54,61 L 54,72 L 42,72 L 42,61 A 6,6 0 0 0 30,61 L 30,72 L 18,72 L 18,61 A 6,6 0 0 0 6,61 L 6,72 L 0,72 Z" fill="#FFFFFF" stroke="#0F172A" stroke-width="2" stroke-linejoin="round"/>
+    <!-- Row 1: > < > -->
+    <polygon points="7,24 18,29.5 7,35" fill="none" stroke="#0F172A" stroke-width="1.7" stroke-linejoin="round"/>
+    <polygon points="30,29.5 41,24 41,35" fill="none" stroke="#0F172A" stroke-width="1.7" stroke-linejoin="round"/>
+    <polygon points="54,24 65,29.5 54,35" fill="none" stroke="#0F172A" stroke-width="1.7" stroke-linejoin="round"/>
+    <!-- Row 2: > < > -->
+    <polygon points="7,38 18,43.5 7,49" fill="none" stroke="#0F172A" stroke-width="1.7" stroke-linejoin="round"/>
+    <polygon points="30,43.5 41,38 41,49" fill="none" stroke="#0F172A" stroke-width="1.7" stroke-linejoin="round"/>
+    <polygon points="54,38 65,43.5 54,49" fill="none" stroke="#0F172A" stroke-width="1.7" stroke-linejoin="round"/>
+    <text x="36" y="92" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#0F172A">(C)</text>
+  </g>
+
+  <!-- Option (D): 3 arches on top & 3 arches on bottom; triangles < > < -->
+  <g transform="translate(352, 156)">
+    <path d="M 0,0 L 6,0 L 6,11 A 6,6 0 0 0 18,11 L 18,0 L 30,0 L 30,11 A 6,6 0 0 0 42,11 L 42,0 L 54,0 L 54,11 A 6,6 0 0 0 66,11 L 66,0 L 72,0 L 72,72 L 66,72 L 66,61 A 6,6 0 0 0 54,61 L 54,72 L 42,72 L 42,61 A 6,6 0 0 0 30,61 L 30,72 L 18,72 L 18,61 A 6,6 0 0 0 6,61 L 6,72 L 0,72 Z" fill="#FFFFFF" stroke="#0F172A" stroke-width="2" stroke-linejoin="round"/>
+    <!-- Row 1: < > < -->
+    <polygon points="7,29.5 18,24 18,35" fill="none" stroke="#0F172A" stroke-width="1.7" stroke-linejoin="round"/>
+    <polygon points="31,24 42,29.5 31,35" fill="none" stroke="#0F172A" stroke-width="1.7" stroke-linejoin="round"/>
+    <polygon points="54,29.5 65,24 65,35" fill="none" stroke="#0F172A" stroke-width="1.7" stroke-linejoin="round"/>
+    <!-- Row 2: < > < -->
+    <polygon points="7,43.5 18,38 18,49" fill="none" stroke="#0F172A" stroke-width="1.7" stroke-linejoin="round"/>
+    <polygon points="31,38 42,43.5 31,49" fill="none" stroke="#0F172A" stroke-width="1.7" stroke-linejoin="round"/>
+    <polygon points="54,43.5 65,38 65,49" fill="none" stroke="#0F172A" stroke-width="1.7" stroke-linejoin="round"/>
+    <text x="36" y="92" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#0F172A">(D)</text>
+  </g>
+</svg>

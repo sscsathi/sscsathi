@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 430 250" width="430" height="250">
+  <rect width="430" height="250" fill="#FFFFFF"/>
+  <!-- Image X -->
+  <text x="16" y="18" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#0F172A">Image X:</text>
+
+  <!-- X1: Star segments from SW-inner clockwise to S-outer -->
+  <g transform="translate(16, 26)">
+    <rect x="0" y="0" width="94" height="84" fill="#FFFFFF" stroke="#475569" stroke-width="1.6"/>
+    <polyline points="35,54 20,42 36,42 36,24 47,36 58,24 58,42 74,42 59,54 47,54 47,70" fill="none" stroke="#1E293B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- X2: Slides CCW by 1 step -->
+  <g transform="translate(116, 26)">
+    <rect x="0" y="0" width="94" height="84" fill="#FFFFFF" stroke="#475569" stroke-width="1.6"/>
+    <polyline points="20,66 35,54 20,42 36,42 36,24 47,36 58,24 58,42 72,42" fill="none" stroke="#1E293B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <polyline points="35,54 47,54 47,70" fill="none" stroke="#1E293B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- X3: Slides CCW by 1 more step -->
+  <g transform="translate(216, 26)">
+    <rect x="0" y="0" width="94" height="84" fill="#FFFFFF" stroke="#475569" stroke-width="1.6"/>
+    <polyline points="42,66 26,66 37,54 24,44 40,44 40,24 51,36 62,24 62,44" fill="none" stroke="#1E293B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <polyline points="37,54 51,54 51,36" fill="none" stroke="#1E293B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- X4: Slides CCW by 1 more step -->
+  <g transform="translate(316, 26)">
+    <rect x="0" y="0" width="94" height="84" fill="#FFFFFF" stroke="#475569" stroke-width="1.6"/>
+    <polyline points="44,70 44,54 26,54 37,43 26,32 44,32 44,16 54,27 65,16" fill="none" stroke="#1E293B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <polyline points="54,27 54,44 72,44" fill="none" stroke="#1E293B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Image Y -->
+  <text x="16" y="132" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#0F172A">Image Y:</text>
+
+  <!-- Option (A): Mirrored horizontally version of X4 -->
+  <g transform="translate(16, 140)">
+    <rect x="0" y="0" width="94" height="84" fill="#FFFFFF" stroke="#475569" stroke-width="1.6"/>
+    <polyline points="50,70 50,54 68,54 57,43 68,32 50,32 50,16 40,27 29,16" fill="none" stroke="#1E293B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <polyline points="40,27 40,44 22,44" fill="none" stroke="#1E293B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="47" y="102" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#0F172A">(A)</text>
+  </g>
+
+  <!-- Option (B): Shifted lower diagonal -->
+  <g transform="translate(116, 140)">
+    <rect x="0" y="0" width="94" height="84" fill="#FFFFFF" stroke="#475569" stroke-width="1.6"/>
+    <polyline points="46,16 46,31 28,31 39,42 28,53 46,53 46,68 57,57 68,68" fill="none" stroke="#1E293B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <polyline points="39,42 57,42 57,57" fill="none" stroke="#1E293B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="47" y="102" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#0F172A">(B)</text>
+  </g>
+
+  <!-- Option (C) [CORRECT]: Next CCW step from X4 -->
+  <g transform="translate(216, 140)">
+    <rect x="0" y="0" width="94" height="84" fill="#FFFFFF" stroke="#475569" stroke-width="1.6"/>
+    <polyline points="54,28 43,16 43,34 25,34 36,45 25,56 43,56 43,72 54,60 54,44 72,44" fill="none" stroke="#1E293B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="47" y="102" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#0F172A">(C)</text>
+  </g>
+
+  <!-- Option (D): Disconnected L-piece at right -->
+  <g transform="translate(316, 140)">
+    <rect x="0" y="0" width="94" height="84" fill="#FFFFFF" stroke="#475569" stroke-width="1.6"/>
+    <polyline points="42,16 42,32 24,32 35,43 24,54 42,54 42,70 52,59 63,70" fill="none" stroke="#1E293B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <polyline points="55,24 55,41 73,41" fill="none" stroke="#1E293B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="47" y="102" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#0F172A">(D)</text>
+  </g>
+</svg>

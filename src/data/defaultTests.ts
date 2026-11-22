@@ -5,6 +5,7 @@ import { FULL_MOCK_01_OCT_SHIFT1 } from './mock01OctShift1';
 import { FULL_MOCK_01_OCT_SHIFT2 } from './mock01OctShift2';
 import { FULL_MOCK_01_OCT_SHIFT3 } from './mock01OctShift3';
 import { FULL_MOCK_05_OCT_SHIFT1 } from './mock05OctShift1';
+import { ADDITIONAL_TESTS } from './tests';
 
 // Keep full mocks in chronological exam order (oldest shift first; append newer shifts below)
 export const DEFAULT_MOCK_TESTS: MockTest[] = [
@@ -359,4 +360,5 @@ export const DEFAULT_MOCK_TESTS: MockTest[] = [
       },
     ],
   },
+  ...ADDITIONAL_TESTS,
 ];

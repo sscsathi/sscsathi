@@ -15,6 +15,17 @@ import {
   XCircle,
 } from 'lucide-react';
 import { ExamResult, MockTest, OptionIndex, QuestionLanguage } from '../types/exam';
+import {
+  EXPLANATION_FONT_CLASS,
+  FONT_ZOOM_STEPS,
+  FontZoomLevel,
+  loadSavedFontZoom,
+  OPTION_FONT_CLASS,
+  PASSAGE_BODY_FONT_CLASS,
+  QUESTION_FONT_CLASS,
+  saveFontZoom,
+  stepFontZoom,
+} from '../utils/fontZoom';
 import { estimatePercentile, formatDurationVerbose } from '../utils/scoring';
 import { MathText } from './MathText';
 
@@ -45,6 +56,18 @@ export function ResultScreen({
   const [solutionFilter, setSolutionFilter] = useState<SolutionFilter>('all');
   const [selectedSectionId, setSelectedSectionId] = useState<string>('all');
   const [solutionLang, setSolutionLang] = useState<QuestionLanguage>('en');
+  const [fontZoom, setFontZoom] = useState<FontZoomLevel>(() => loadSavedFontZoom());
+
+  const minFontZoom = FONT_ZOOM_STEPS[0];
+  const maxFontZoom = FONT_ZOOM_STEPS[FONT_ZOOM_STEPS.length - 1];
+
+  const handleAdjustFontZoom = (delta: -1 | 1) => {
+    setFontZoom((prev) => {
+      const next = stepFontZoom(prev, delta);
+      saveFontZoom(next);
+      return next;
+    });
+  };
 
   const activeAttemptIndex = useMemo(() => {
     const idx = attemptsForTest.findIndex((a) => a.attemptId === result.attemptId);
@@ -667,42 +690,73 @@ export function ResultScreen({
                   ))}
                 </div>
 
-                {isBilingualTest && (
+                <div className="flex items-center gap-2">
                   <div
                     role="group"
-                    aria-label="Solution language"
+                    aria-label="Font size zoom"
+                    title={`Text size: ${fontZoom}%`}
                     className="inline-flex items-center rounded-lg border border-slate-200 bg-white p-0.5 shadow-2xs"
                   >
-                    <Languages
-                      className="ml-1.5 mr-1 h-3.5 w-3.5 text-slate-400"
-                      aria-hidden="true"
-                    />
                     <button
                       type="button"
-                      onClick={() => setSolutionLang('en')}
-                      aria-pressed={solutionLang === 'en'}
-                      className={`rounded-md px-2.5 py-1 text-xs font-bold transition-colors ${
-                        solutionLang === 'en'
-                          ? 'bg-[#0F172A] text-white shadow-2xs'
-                          : 'text-slate-600 hover:bg-slate-100 hover:text-[#0F172A]'
-                      }`}
+                      onClick={() => handleAdjustFontZoom(-1)}
+                      disabled={fontZoom <= minFontZoom}
+                      aria-label="Decrease font size"
+                      title={`Decrease text size (${fontZoom}%)`}
+                      className="rounded-md px-2 py-1 text-xs font-extrabold text-slate-700 transition-colors hover:bg-slate-100 hover:text-[#0F172A] disabled:opacity-35 disabled:pointer-events-none"
                     >
-                      EN
+                      A-
                     </button>
+                    <span className="h-3.5 w-px bg-slate-200" aria-hidden="true" />
                     <button
                       type="button"
-                      onClick={() => setSolutionLang('hi')}
-                      aria-pressed={solutionLang === 'hi'}
-                      className={`rounded-md px-2.5 py-1 text-xs font-bold transition-colors ${
-                        solutionLang === 'hi'
-                          ? 'bg-[#0F172A] text-white shadow-2xs'
-                          : 'text-slate-600 hover:bg-slate-100 hover:text-[#0F172A]'
-                      }`}
+                      onClick={() => handleAdjustFontZoom(1)}
+                      disabled={fontZoom >= maxFontZoom}
+                      aria-label="Increase font size"
+                      title={`Increase text size (${fontZoom}%)`}
+                      className="rounded-md px-2 py-1 text-xs font-extrabold text-slate-700 transition-colors hover:bg-slate-100 hover:text-[#0F172A] disabled:opacity-35 disabled:pointer-events-none"
                     >
-                      HI
+                      A+
                     </button>
                   </div>
-                )}
+
+                  {isBilingualTest && (
+                    <div
+                      role="group"
+                      aria-label="Solution language"
+                      className="inline-flex items-center rounded-lg border border-slate-200 bg-white p-0.5 shadow-2xs"
+                    >
+                      <Languages
+                        className="ml-1.5 mr-1 h-3.5 w-3.5 text-slate-400"
+                        aria-hidden="true"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setSolutionLang('en')}
+                        aria-pressed={solutionLang === 'en'}
+                        className={`rounded-md px-2.5 py-1 text-xs font-bold transition-colors ${
+                          solutionLang === 'en'
+                            ? 'bg-[#0F172A] text-white shadow-2xs'
+                            : 'text-slate-600 hover:bg-slate-100 hover:text-[#0F172A]'
+                        }`}
+                      >
+                        EN
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSolutionLang('hi')}
+                        aria-pressed={solutionLang === 'hi'}
+                        className={`rounded-md px-2.5 py-1 text-xs font-bold transition-colors ${
+                          solutionLang === 'hi'
+                            ? 'bg-[#0F172A] text-white shadow-2xs'
+                            : 'text-slate-600 hover:bg-slate-100 hover:text-[#0F172A]'
+                        }`}
+                      >
+                        HI
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {filteredQuestions.length === 0 ? (
@@ -748,17 +802,21 @@ export function ResultScreen({
                         </div>
 
                         {q.passageEn && (
-                          <details className="mt-4 rounded-xl border border-slate-200 bg-[#F8FAFC] p-3.5 text-xs sm:text-sm text-slate-700">
-                            <summary className="cursor-pointer font-bold text-[#1E3A8A]">
+                          <details className="mt-4 rounded-xl border border-slate-200 bg-[#F8FAFC] p-3.5 text-slate-700">
+                            <summary className="cursor-pointer text-xs sm:text-sm font-bold text-[#1E3A8A]">
                               View Reading Passage
                             </summary>
-                            <p className="mt-2.5 leading-relaxed whitespace-pre-line">
+                            <p
+                              className={`mt-2.5 ${PASSAGE_BODY_FONT_CLASS[fontZoom]} leading-[1.65] whitespace-pre-line transition-[font-size] duration-150 ease-out`}
+                            >
                               {q.passageEn}
                             </p>
                           </details>
                         )}
 
-                        <h3 className="mt-4 text-base font-semibold text-[#0F172A] leading-relaxed whitespace-pre-line">
+                        <h3
+                          className={`mt-4 ${QUESTION_FONT_CLASS[fontZoom]} font-semibold text-[#0F172A] leading-[1.6] whitespace-pre-line transition-[font-size] duration-150 ease-out`}
+                        >
                           <MathText
                             text={solutionLang === 'hi' && q.questionHi ? q.questionHi : q.questionEn}
                           />
@@ -836,7 +894,9 @@ export function ResultScreen({
                                       />
                                     </div>
                                   ) : (
-                                    <span className="font-medium">
+                                    <span
+                                      className={`${OPTION_FONT_CLASS[fontZoom]} font-medium leading-[1.5] transition-[font-size] duration-150 ease-out`}
+                                    >
                                       <MathText text={optText} />
                                     </span>
                                   )}
@@ -855,13 +915,15 @@ export function ResultScreen({
                           })}
                         </div>
 
-                        <div className="mt-4 rounded-xl border border-amber-200/80 bg-amber-50/60 p-4 text-sm text-slate-800">
+                        <div className="mt-4 rounded-xl border border-amber-200/80 bg-amber-50/60 p-4 text-slate-800">
                           <div className="text-xs font-bold uppercase tracking-wide text-[#0F172A]">
                             {solutionLang === 'hi' && q.explanationHi
                               ? 'विस्तृत हल (Solution Explanation)'
                               : 'Solution Explanation'}
                           </div>
-                          <p className="mt-1.5 leading-relaxed whitespace-pre-line">
+                          <p
+                            className={`mt-1.5 ${EXPLANATION_FONT_CLASS[fontZoom]} leading-[1.6] whitespace-pre-line transition-[font-size] duration-150 ease-out`}
+                          >
                             <MathText
                               text={
                                 solutionLang === 'hi' && q.explanationHi

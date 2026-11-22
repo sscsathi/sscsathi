@@ -23,6 +23,18 @@ import {
   QuestionResponse,
   QuestionStatus,
 } from '../types/exam';
+import {
+  FONT_ZOOM_STEPS,
+  FontZoomLevel,
+  loadSavedFontZoom,
+  OPTION_FONT_CLASS,
+  PASSAGE_BODY_FONT_CLASS,
+  PASSAGE_OPTION_FONT_CLASS,
+  PASSAGE_QUESTION_FONT_CLASS,
+  QUESTION_FONT_CLASS,
+  saveFontZoom,
+  stepFontZoom,
+} from '../utils/fontZoom';
 import { calculateExamResult, formatTimer } from '../utils/scoring';
 import { MathText } from './MathText';
 import { PaletteSymbol, toPaletteVisualState } from './PaletteSymbol';
@@ -64,8 +76,20 @@ export function ExamInterface({
   const [submitModalMode, setSubmitModalMode] = useState<'none' | 'section' | 'full'>('none');
   const [isExitModalOpen, setIsExitModalOpen] = useState<boolean>(false);
   const [language, setLanguage] = useState<QuestionLanguage>(initialLanguage);
+  const [fontZoom, setFontZoom] = useState<FontZoomLevel>(() => loadSavedFontZoom());
   const [swipeOffset, setSwipeOffset] = useState<number>(0);
   const [swipeSlideDir, setSwipeSlideDir] = useState<'next' | 'prev' | null>(null);
+
+  const minFontZoom = FONT_ZOOM_STEPS[0];
+  const maxFontZoom = FONT_ZOOM_STEPS[FONT_ZOOM_STEPS.length - 1];
+
+  const handleAdjustFontZoom = useCallback((delta: -1 | 1) => {
+    setFontZoom((prev) => {
+      const next = stepFontZoom(prev, delta);
+      saveFontZoom(next);
+      return next;
+    });
+  }, []);
 
   // Guard against double-triggering section transition or test submission on 0s
   const zeroHandledForSectionRef = useRef<number>(-1);
@@ -839,7 +863,37 @@ export function ExamInterface({
                 </span>
               </div>
 
-              <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+              <div className="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
+                {/* Compact A- / A+ Font Zoom Controls (persisted across questions & tests) */}
+                <div
+                  role="group"
+                  aria-label="Font size zoom"
+                  title={`Text size: ${fontZoom}%`}
+                  className="inline-flex items-center rounded-lg border border-slate-200 bg-white p-0.5 shadow-2xs"
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleAdjustFontZoom(-1)}
+                    disabled={fontZoom <= minFontZoom}
+                    aria-label="Decrease font size"
+                    title={`Decrease text size (${fontZoom}%)`}
+                    className="rounded-md px-1.5 py-0.5 text-[11px] font-extrabold text-slate-700 transition-colors hover:bg-slate-100 hover:text-[#0F172A] disabled:opacity-35 disabled:pointer-events-none sm:px-2 sm:text-xs"
+                  >
+                    A-
+                  </button>
+                  <span className="h-3.5 w-px bg-slate-200" aria-hidden="true" />
+                  <button
+                    type="button"
+                    onClick={() => handleAdjustFontZoom(1)}
+                    disabled={fontZoom >= maxFontZoom}
+                    aria-label="Increase font size"
+                    title={`Increase text size (${fontZoom}%)`}
+                    className="rounded-md px-1.5 py-0.5 text-[11px] font-extrabold text-slate-700 transition-colors hover:bg-slate-100 hover:text-[#0F172A] disabled:opacity-35 disabled:pointer-events-none sm:px-2 sm:text-xs"
+                  >
+                    A+
+                  </button>
+                </div>
+
                 {/* Clean EN / HI Language Switcher (hidden in English section) */}
                 {!isEnglishSection && (
                   <div
@@ -855,7 +909,7 @@ export function ExamInterface({
                       type="button"
                       onClick={() => setLanguage('en')}
                       aria-pressed={language === 'en'}
-                      className={`rounded-md px-2 py-0.5 text-[11px] font-bold transition-colors sm:px-2.5 sm:text-xs ${
+                      className={`rounded-md px-1.5 py-0.5 text-[11px] font-bold transition-colors sm:px-2.5 sm:text-xs ${
                         language === 'en'
                           ? 'bg-[#0F172A] text-white shadow-2xs'
                           : 'text-slate-600 hover:bg-slate-100 hover:text-[#0F172A]'
@@ -867,7 +921,7 @@ export function ExamInterface({
                       type="button"
                       onClick={() => setLanguage('hi')}
                       aria-pressed={language === 'hi'}
-                      className={`rounded-md px-2 py-0.5 text-[11px] font-bold transition-colors sm:px-2.5 sm:text-xs ${
+                      className={`rounded-md px-1.5 py-0.5 text-[11px] font-bold transition-colors sm:px-2.5 sm:text-xs ${
                         language === 'hi'
                           ? 'bg-[#0F172A] text-white shadow-2xs'
                           : 'text-slate-600 hover:bg-slate-100 hover:text-[#0F172A]'
@@ -925,14 +979,18 @@ export function ExamInterface({
                   <div className="mb-1.5 text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-[#1E3A8A]">
                     Read the passage carefully
                   </div>
-                  <div className="text-[13px] sm:text-[14.5px] leading-relaxed text-slate-800 whitespace-pre-line">
+                  <div
+                    className={`${PASSAGE_BODY_FONT_CLASS[fontZoom]} leading-[1.65] text-slate-800 whitespace-pre-line transition-[font-size] duration-150 ease-out`}
+                  >
                     {currentQuestion.passageEn}
                   </div>
                 </div>
 
                 {/* Bottom Panel (shrink-0 h-auto): Auto-fits Question Prompt & 4 Tight Option Buttons with Zero Empty Space */}
                 <div className="shrink-0 h-auto max-h-[55%] overflow-y-auto touch-pan-y border-t-2 border-slate-200 bg-white p-2.5 sm:px-4 sm:py-3 shadow-[0_-4px_12px_-6px_rgba(15,23,42,0.1)]">
-                  <h2 className="text-[13px] sm:text-sm font-semibold leading-snug text-[#0F172A] whitespace-pre-line">
+                  <h2
+                    className={`${PASSAGE_QUESTION_FONT_CLASS[fontZoom]} font-semibold leading-[1.5] text-[#0F172A] whitespace-pre-line transition-[font-size] duration-150 ease-out`}
+                  >
                     <MathText text={displayedQuestionText} />
                   </h2>
 
@@ -970,7 +1028,7 @@ export function ExamInterface({
                               {letter}
                             </span>
                             <span
-                              className={`text-[12.5px] sm:text-sm leading-snug ${
+                              className={`${PASSAGE_OPTION_FONT_CLASS[fontZoom]} leading-[1.45] transition-[font-size] duration-150 ease-out ${
                                 isSelected ? 'font-bold text-[#0F172A]' : 'font-medium'
                               }`}
                             >
@@ -1019,7 +1077,9 @@ export function ExamInterface({
                   </div>
                 )}
 
-                <h2 className="text-[13.5px] sm:text-base font-semibold leading-snug sm:leading-relaxed text-[#0F172A] whitespace-pre-line">
+                <h2
+                  className={`${QUESTION_FONT_CLASS[fontZoom]} font-semibold leading-[1.6] text-[#0F172A] whitespace-pre-line transition-[font-size] duration-150 ease-out`}
+                >
                   <MathText text={displayedQuestionText} />
                 </h2>
 
@@ -1113,7 +1173,7 @@ export function ExamInterface({
                             </div>
                           ) : (
                             <span
-                              className={`text-[13px] sm:text-sm leading-snug ${
+                              className={`${OPTION_FONT_CLASS[fontZoom]} leading-[1.5] transition-[font-size] duration-150 ease-out ${
                                 isSelected ? 'font-bold text-[#0F172A]' : 'font-medium'
                               }`}
                             >

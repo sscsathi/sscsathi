@@ -1,6 +1,8 @@
 export type MathSegment =
   | { type: 'text'; value: string }
-  | { type: 'fraction'; numerator: MathSegment[]; denominator: MathSegment[]; rawText: string };
+  | { type: 'fraction'; numerator: MathSegment[]; denominator: MathSegment[]; rawText: string }
+  | { type: 'delimited'; open: '(' | '['; close: ')' | ']'; content: MathSegment[] }
+  | { type: 'sqrt'; content: MathSegment[]; isTall: boolean; rawText: string };
 
 const SUPERSCRIPTS = '⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻ⁿ';
 const SUBSCRIPTS = '₀₁₂₃₄₅₆₇₈₉';
@@ -236,7 +238,7 @@ function isMatchingBracketPair(open: string, close: string): boolean {
  * bracket at index 0 matches the closing bracket at index str.length - 1.
  */
 function stripOuterGrouping(str: string): string {
-  let s = str.trim();
+  const s = str.trim();
   if (s.length < 2) return s;
   const open = s[0];
   const close = s[s.length - 1];
@@ -249,7 +251,6 @@ function stripOuterGrouping(str: string): string {
     else if (ch === ')' || ch === ']') {
       depth--;
       if (depth === 0 && i < s.length - 1) {
-        // Closed before the end (e.g. "(a + b)(c + d)") -> do NOT strip
         return s;
       }
     }
@@ -270,39 +271,27 @@ function isCodedRelationLine(line: string): boolean {
     return true;
   }
   const trimmed = line.trim();
-  // Pure symbol-relation expression like "P * Q / S" or "P + Q / S"
   if (/^[A-Z](?:\s*[+*\/@&#%$=-]\s*[A-Z])+$/.test(trimmed) && /[+*@&#%$]/.test(trimmed)) {
     return true;
   }
   return false;
 }
 
-/**
- * Check whether an operand (numerator or denominator) looks genuinely mathematical
- * rather than ordinary English or Hindi prose.
- */
 function isValidMathOperand(raw: string): boolean {
   const s = raw.trim();
   if (!s) return false;
 
-  // Reject bare quotes or sentence punctuation
   if (/^["'“”‘’.,;:?!।]+$/.test(s)) return false;
 
-  // Bracketed expression: allow if it contains math symbols/digits/operators or valid math sub-atoms
   const inner = stripOuterGrouping(s);
   const wasBracketed = inner !== s;
 
-  // Check if Devanagari text is present
   const hasDevanagari = /[\u0900-\u097F]/.test(inner);
   if (hasDevanagari) {
-    // Allow Hindi math expressions only when they explicitly include math operators/symbols
-    // (e.g., "(आधार × लंब)", "(ओम × मीटर²)") or are short single Hindi math nouns paired with a math expression
     if (/[×÷+\-−=²³√π\d]/.test(inner)) return true;
-    // Standalone Hindi math noun like "कर्ण" or "मीटर" is checked at pair level
     return /^[\u0900-\u097F]{2,10}$/.test(inner);
   }
 
-  // Pure numeric / radical / superscript / Greek / variable+number term (e.g., "121π", "3√3", "1,50,000", "4r²", "2n", "V²")
   if (
     /^(?:[−-]\s*)?(?:[√∛∜]?\d[\d,]*(?:\.\d+)?[°]?(?:[a-zA-Zπθθαβγδρλμω²³⁴ⁿ₀-₉]*)?|[√∛∜][a-zA-Z\dπθ²³⁴]+)$/.test(
       inner
@@ -311,7 +300,6 @@ function isValidMathOperand(raw: string): boolean {
     return true;
   }
 
-  // Trig / log expression (e.g., "sin θ", "cos A", "cosec² θ", "tan 30°", "cot 60°")
   if (
     /^(?:[−-]\s*)?(?:\d+\s*)?(?:cosec|csc|sin|cos|tan|cot|sec|log|ln)[²³⁴]?(?:\s*\([^)]+\)|\s+[a-zA-Zπθθαβγδ\d°²³]+)?$/i.test(
       inner
@@ -320,24 +308,21 @@ function isValidMathOperand(raw: string): boolean {
     return true;
   }
 
-  // Single letter variable (with optional Δ prefix, superscript/subscript/prime, e.g., "a", "p", "x²", "A₁", "V'", "Δx", "Δy")
+  // Single letter variable (with optional Δ prefix, superscript/subscript/prime)
   if (/^(?:[−-]\s*)?Δ?[a-zA-Zπθθαβγδρλμω][⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻ⁿ₀-₉′']*$/.test(inner)) {
     return true;
   }
 
-  // Standard 2-3 letter uppercase math abbreviations (CP, SP, AD, AB, BC, etc.)
   if (MATH_ABBREV_ALLOWLIST.has(inner)) {
     return true;
   }
 
-  // Short algebraic monomial like "xy", "ab", "2ab", "πr²h", "4r²", "sinA"
   if (
     /^(?:[−-]\s*)?(?:\d+(?:\.\d+)?)?[πrRlLhHdDaAbBcCxXyYpPqQnN][⁰¹²³⁴⁵⁶⁷⁸⁹ⁿ₀-₉]*(?:[πrRlLhHdDaAbBcCxXyYpPqQnN][⁰¹²³⁴⁵⁶⁷⁸⁹ⁿ₀-₉]*){1,3}$/.test(
       inner
     ) &&
     !ENGLISH_TWO_LETTER_WORDS.has(inner.toLowerCase())
   ) {
-    // Reject ordinary English words of length 3-4 that happen to use those letters (e.g. "had", "all", "and", "can", "day")
     const commonWords = new Set([
       'had',
       'all',
@@ -421,9 +406,7 @@ function isValidMathOperand(raw: string): boolean {
     }
   }
 
-  // Compound expression inside brackets (e.g., "(p² + 1)", "(√2 + 1)²", "(x² + xy + y²)", "(sin A cos A)", "(a × b)")
   if (wasBracketed || /[()[\]]/.test(s)) {
-    // Reject if it contains long non-math prose words (>= 4 letters not in trig/math set)
     const words = inner.match(/[a-zA-Z]{2,}/g) ?? [];
     for (const w of words) {
       const lower = w.toLowerCase();
@@ -440,10 +423,8 @@ function isValidMathOperand(raw: string): boolean {
       ) {
         continue;
       }
-      // Reject prose sentences inside parentheses like "(helpful/advantageous)"
       return false;
     }
-    // Must contain at least one math operator, digit, radical, or trig term
     if (/[+\-−×÷*/=²³⁴ⁿ√∛πθ\d]/.test(inner) || /\b(?:sin|cos|tan|cot|sec|cosec)\b/i.test(inner)) {
       return true;
     }
@@ -452,10 +433,6 @@ function isValidMathOperand(raw: string): boolean {
   return false;
 }
 
-/**
- * Validate a candidate (numerator, denominator) pair together to eliminate units,
- * prose alternatives, error-spotting markers, and dates.
- */
 function isValidFractionPair(
   numRaw: string,
   denRaw: string,
@@ -467,22 +444,18 @@ function isValidFractionPair(
   const den = denRaw.trim();
   if (!num || !den) return false;
 
-  // Reject error-spotting sentence markers like "(1)/ needed" or "(2)/ were"
   if (/^\([1-4a-d]\)$/i.test(num) && !/^[\d√(]/.test(den)) {
     return false;
   }
 
-  // Reject known prose/abbreviation pairs (w/o, n/a, c/o, etc.)
   const compactPair = `${num.toLowerCase()}/${den.toLowerCase()}`;
   if (PROSE_PAIRS.has(compactPair)) return false;
 
-  // Reject units & rates like km/h, m/s, units/day, इकाई/दिन, s/Q, kg/m³
   const numLower = num.toLowerCase();
   const denLower = den.toLowerCase();
   if (UNIT_NUMERATORS.has(numLower) && UNIT_DENOMINATORS.has(denLower)) {
     return false;
   }
-  // Specifically catch single-letter unit pairs like "m/s", "m/min", "s/Q", "L/min", "km/hr"
   if (
     (numLower === 'm' && /^(?:s|sec|min|hr|h)$/.test(denLower)) ||
     (numLower === 's' && denLower === 'q') ||
@@ -496,8 +469,7 @@ function isValidFractionPair(
     return false;
   }
 
-  // Reject if either operand is Devanagari unless at least one Devanagari side itself contains a math operator
-  // (allows "(आधार × लंब) / कर्ण" & "(ओम × मीटर²) / मीटर", while rejecting prose like "पलट / 180°")
+  // Reject Devanagari prose unless at least one Devanagari side contains an explicit math operator
   const numHasDev = /[\u0900-\u097F]/.test(num);
   const denHasDev = /[\u0900-\u097F]/.test(den);
   if (numHasDev || denHasDev) {
@@ -508,7 +480,7 @@ function isValidFractionPair(
     }
   }
 
-  // Reject dates like 15/08/1947 or 01/10/2026 (another slash adjacent to a digit immediately before or after)
+  // Reject dates like 15/08/1947
   if (/^\d{1,4}$/.test(num) && /^\d{1,4}$/.test(den)) {
     if (
       (fracStart > 0 && line[fracStart - 1] === '/') ||
@@ -518,7 +490,7 @@ function isValidFractionPair(
     }
   }
 
-  // Reject if we sliced mid-word on the left or right (e.g., "2/3rd", "foo/bar", "10km/h")
+  // Word-boundary checks
   if (fracStart > 0) {
     const prev = line[fracStart - 1];
     if (isAsciiLetter(prev) || isDevanagari(prev)) return false;
@@ -526,14 +498,10 @@ function isValidFractionPair(
   if (fracEnd < line.length) {
     const next = line[fracEnd];
     if (isAsciiLetter(next) || isDevanagari(next)) {
-      // Exception: immediate Greek/variable right after closing bracket like "(1/2)CV²" has ')' at fracEnd-1,
-      // and "(1/3)πr²h" has ')' before π — here `fracEnd` is BEFORE ')', so next is ')', not a letter!
       return false;
     }
   }
 
-  // Reject standalone uppercase single-letter pairs like "A/B" when NOT in a mathematical context
-  // (e.g. avoid "Option A/B" or "Grade A/B", while ALLOWING "A / B = 11 / 10", "R = ρ(l / A)", "a/b")
   if (/^[A-Z]$/.test(num) && /^[A-Z]$/.test(den)) {
     const surrounding = line.slice(Math.max(0, fracStart - 15), Math.min(line.length, fracEnd + 15));
     const hasMathContext = /[=×÷+\-−⇒→:()]|\d/.test(surrounding);
@@ -543,23 +511,17 @@ function isValidFractionPair(
   return isValidMathOperand(num) && isValidMathOperand(den);
 }
 
-/**
- * Scan backwards from `endExclusive` (right before optional spaces + `/`) to locate the numerator span.
- */
 function extractLeftOperand(line: string, endExclusive: number): { start: number; text: string } | null {
   let end = endExclusive;
   while (end > 0 && line[end - 1] === ' ') end--;
   if (end <= 0) return null;
 
   let pos = end;
-
-  // Optional trailing superscripts attached to a closing bracket, e.g. "(√2 + 1)²" or "(x + 1)³"
-  let trailingSupEnd = pos;
+  const trailingSupEnd = pos;
   while (pos > 0 && (SUPERSCRIPTS.includes(line[pos - 1]) || line[pos - 1] === '°')) {
     pos--;
   }
 
-  // Case 1: Bracketed numerator (...) or [...]
   if (pos > 0 && (line[pos - 1] === ')' || line[pos - 1] === ']')) {
     const closeBracket = line[pos - 1];
     const openBracket = closeBracket === ')' ? '(' : '[';
@@ -575,11 +537,9 @@ function extractLeftOperand(line: string, endExclusive: number): { start: number
     if (depth !== 0) return null;
 
     let start = i;
-    // Attach immediate radical prefix like "√(18 - 4)"
     if (start > 0 && RADICALS.includes(line[start - 1])) {
       start--;
     }
-    // Attach immediate trig/log function name like "sin(x)" or "cos(θ + 30°)"
     let fnStart = start;
     while (fnStart > 0 && (isAsciiLetter(line[fnStart - 1]) || SUPERSCRIPTS.includes(line[fnStart - 1]))) {
       fnStart--;
@@ -591,7 +551,6 @@ function extractLeftOperand(line: string, endExclusive: number): { start: number
     return { start, text: line.slice(start, trailingSupEnd) };
   }
 
-  // Reset pos for Case 2: Simple math atom
   pos = end;
   let i = pos;
   while (i > 0) {
@@ -599,7 +558,6 @@ function extractLeftOperand(line: string, endExclusive: number): { start: number
     if (isMathAtomChar(ch) || isDevanagari(ch)) {
       i--;
     } else if ((ch === ',' || ch === '.') && i - 2 >= 0 && isDigit(line[i - 2]) && i < pos && isDigit(line[i])) {
-      // Allow commas/decimals strictly inside numbers (e.g. "1,50,000" or "3.14")
       i--;
     } else {
       break;
@@ -609,7 +567,6 @@ function extractLeftOperand(line: string, endExclusive: number): { start: number
   if (i === pos) return null;
   let start = i;
 
-  // Check if preceded by a trig function + space (e.g., "sec θ", "sin A", "cosec² θ", "tan 30°")
   let spaceIdx = start;
   while (spaceIdx > 0 && line[spaceIdx - 1] === ' ') spaceIdx--;
   if (spaceIdx < start) {
@@ -629,24 +586,18 @@ function extractLeftOperand(line: string, endExclusive: number): { start: number
   return { start, text: line.slice(start, pos) };
 }
 
-/**
- * Scan forwards from `startInclusive` (right after `/` + optional spaces) to locate the denominator span.
- */
 function extractRightOperand(line: string, startInclusive: number): { end: number; text: string } | null {
   let start = startInclusive;
   while (start < line.length && line[start] === ' ') start++;
   if (start >= line.length) return null;
 
   let pos = start;
-
-  // Optional radical prefix before bracket: "√(18 - 4)"
   let hasRadicalBeforeBracket = false;
   if (RADICALS.includes(line[pos]) && pos + 1 < line.length && (line[pos + 1] === '(' || line[pos + 1] === '[')) {
     hasRadicalBeforeBracket = true;
     pos++;
   }
 
-  // Case 1: Bracketed denominator (...) or [...]
   if (line[pos] === '(' || line[pos] === '[') {
     const openBracket = line[pos];
     const closeBracket = openBracket === '(' ? ')' : ']';
@@ -662,7 +613,6 @@ function extractRightOperand(line: string, startInclusive: number): { end: numbe
     if (depth !== 0) return null;
 
     let end = i + 1;
-    // Include trailing superscripts attached to the closing bracket, e.g. "(√2)²"
     while (end < line.length && SUPERSCRIPTS.includes(line[end])) {
       end++;
     }
@@ -672,7 +622,6 @@ function extractRightOperand(line: string, startInclusive: number): { end: numbe
     };
   }
 
-  // Case 2: Simple math atom (possibly trig function + argument, e.g. "sin θ" or "cos(θ + 30°)")
   let i = start;
   while (i < line.length) {
     const ch = line[i];
@@ -695,8 +644,6 @@ function extractRightOperand(line: string, startInclusive: number): { end: numbe
   let end = i;
   const firstToken = line.slice(start, end);
 
-  // If the denominator starts with a trig/log function (e.g., "sin", "cos", "tan", "cosec²"),
-  // also absorb its angle/argument: "sin θ", "tan 30°", "cos(θ + 30°)"
   if (TRIG_FN_RE.test(firstToken)) {
     if (end < line.length && line[end] === '(') {
       let depth = 0;
@@ -737,11 +684,7 @@ interface CandidateFraction {
   denRaw: string;
 }
 
-/**
- * Recursively parse a single line (no newlines) using minimum-depth-first divide-and-conquer
- * so outer fractions like `(4/3 + 4) / (4/3 − 4)` or `1 / (x - 1/x)` are captured before inner ones.
- */
-function parseLine(line: string, nestingDepth: number, safetyBudget = 40): MathSegment[] {
+function parseLineFractions(line: string, nestingDepth: number, safetyBudget = 40): MathSegment[] {
   if (
     !line ||
     !line.includes('/') ||
@@ -752,7 +695,6 @@ function parseLine(line: string, nestingDepth: number, safetyBudget = 40): MathS
     return line ? [{ type: 'text', value: line }] : [];
   }
 
-  // Compute bracket depth for every `/` and collect valid candidates
   let depth = 0;
   let bestCandidate: CandidateFraction | null = null;
 
@@ -768,7 +710,6 @@ function parseLine(line: string, nestingDepth: number, safetyBudget = 40): MathS
     }
     if (ch !== '/') continue;
 
-    // Skip URLs ("http://", "//") and Indian currency ("400/-")
     if (
       (i > 0 && (line[i - 1] === ':' || line[i - 1] === '/')) ||
       (i + 1 < line.length && (line[i + 1] === '/' || line[i + 1] === '-' || line[i + 1] === '−'))
@@ -776,7 +717,6 @@ function parseLine(line: string, nestingDepth: number, safetyBudget = 40): MathS
       continue;
     }
 
-    // Optimization: if we already found a candidate at a shallower depth, only accept strictly shallower depths
     if (bestCandidate && depth >= bestCandidate.depth) {
       continue;
     }
@@ -798,7 +738,6 @@ function parseLine(line: string, nestingDepth: number, safetyBudget = 40): MathS
       denRaw: right.text,
     };
 
-    // Depth 0 is the shallowest possible — pick the leftmost valid depth-0 fraction immediately
     if (depth === 0) break;
   }
 
@@ -814,16 +753,16 @@ function parseLine(line: string, nestingDepth: number, safetyBudget = 40): MathS
 
   const segments: MathSegment[] = [];
   if (prefix) {
-    segments.push(...parseLine(prefix, nestingDepth, safetyBudget - 1));
+    segments.push(...parseLineFractions(prefix, nestingDepth, safetyBudget - 1));
   }
   segments.push({
     type: 'fraction',
-    numerator: parseLine(cleanNum, nestingDepth + 1, safetyBudget - 1),
-    denominator: parseLine(cleanDen, nestingDepth + 1, safetyBudget - 1),
+    numerator: parseLineFractions(cleanNum, nestingDepth + 1, safetyBudget - 1),
+    denominator: parseLineFractions(cleanDen, nestingDepth + 1, safetyBudget - 1),
     rawText: `${cleanNum} / ${cleanDen}`,
   });
   if (suffix) {
-    segments.push(...parseLine(suffix, nestingDepth, safetyBudget - 1));
+    segments.push(...parseLineFractions(suffix, nestingDepth, safetyBudget - 1));
   }
 
   return mergeAdjacentText(segments);
@@ -842,13 +781,286 @@ function mergeAdjacentText(segments: MathSegment[]): MathSegment[] {
   return merged;
 }
 
+function containsTallNode(segments: MathSegment[]): boolean {
+  for (const seg of segments) {
+    if (seg.type === 'fraction') return true;
+    if (seg.type === 'delimited' && containsTallNode(seg.content)) return true;
+    if (seg.type === 'sqrt' && seg.isTall) return true;
+  }
+  return false;
+}
+
+/**
+ * Pass 2: Parse inline square roots inside plain text segments:
+ * - `√(...)` or `√[...]` (e.g., `√(18 - 4)`, `√(d² - 64)`, `√[(5 - 2)² + (7 - 3)²]`)
+ * - Simple radicands `√2`, `√0.16`, `√14`, `√n`, `√x²`
+ */
+function parseInlineSqrtsInText(text: string): MathSegment[] {
+  if (!text.includes('√')) {
+    return text ? [{ type: 'text', value: text }] : [];
+  }
+
+  const out: MathSegment[] = [];
+  let cursor = 0;
+
+  while (cursor < text.length) {
+    const idx = text.indexOf('√', cursor);
+    if (idx === -1) {
+      out.push({ type: 'text', value: text.slice(cursor) });
+      break;
+    }
+
+    if (idx > cursor) {
+      out.push({ type: 'text', value: text.slice(cursor, idx) });
+    }
+
+    const after = idx + 1;
+    if (after >= text.length) {
+      out.push({ type: 'text', value: '√' });
+      break;
+    }
+
+    // Case A: Bracketed radicand √(...) or √[...]
+    if (text[after] === '(' || text[after] === '[') {
+      const open = text[after];
+      const close = open === '(' ? ')' : ']';
+      let depth = 0;
+      let j = after;
+      for (; j < text.length; j++) {
+        if (text[j] === open) depth++;
+        else if (text[j] === close) {
+          depth--;
+          if (depth === 0) break;
+        }
+      }
+      if (depth === 0) {
+        const inner = text.slice(after + 1, j).trim();
+        out.push({
+          type: 'sqrt',
+          content: parseInlineSqrtsInText(inner),
+          isTall: false,
+          rawText: `√(${inner})`,
+        });
+        cursor = j + 1;
+        continue;
+      }
+    }
+
+    // Case B: Simple radicand (number with optional decimals/commas OR single variable with superscripts/subscripts)
+    let j = after;
+    if (isDigit(text[j])) {
+      while (j < text.length) {
+        const ch = text[j];
+        if (isDigit(ch) || SUPERSCRIPTS.includes(ch)) {
+          j++;
+        } else if (
+          (ch === '.' || ch === ',') &&
+          j + 1 < text.length &&
+          isDigit(text[j + 1])
+        ) {
+          j++;
+        } else {
+          break;
+        }
+      }
+      // Attach trailing variable/pi if immediately touching, e.g. √2x
+      while (j < text.length && (GREEK_MATH.includes(text[j]) || SUPERSCRIPTS.includes(text[j]))) {
+        j++;
+      }
+    } else if (isAsciiLetter(text[j]) || GREEK_MATH.includes(text[j])) {
+      j++;
+      while (
+        j < text.length &&
+        (SUPERSCRIPTS.includes(text[j]) || SUBSCRIPTS.includes(text[j]) || isDigit(text[j]))
+      ) {
+        j++;
+      }
+    }
+
+    if (j > after) {
+      const radicand = text.slice(after, j);
+      out.push({
+        type: 'sqrt',
+        content: [{ type: 'text', value: radicand }],
+        isTall: false,
+        rawText: `√${radicand}`,
+      });
+      cursor = j;
+    } else {
+      out.push({ type: 'text', value: '√' });
+      cursor = after;
+    }
+  }
+
+  return mergeAdjacentText(out);
+}
+
+/**
+ * Pass 1: Detect matching `(...)`, `[...]`, `√(...)`, and `√[...]` spanning across
+ * one or more stacked `fraction` segments and upgrade them into auto-scaling
+ * `delimited` or tall `sqrt` AST nodes.
+ */
+function upgradeTallDelimiters(segments: MathSegment[]): MathSegment[] {
+  // First recursively decorate numerator & denominator of every fraction
+  const recursed = segments.map((seg): MathSegment => {
+    if (seg.type === 'fraction') {
+      return {
+        ...seg,
+        numerator: decorateMathSegments(seg.numerator),
+        denominator: decorateMathSegments(seg.denominator),
+      };
+    }
+    return seg;
+  });
+
+  // Tokenize text segments into atomic chars around brackets/√ so we can match spans cleanly
+  type FlatToken =
+    | { kind: 'char'; ch: string }
+    | { kind: 'node'; node: MathSegment };
+
+  const tokens: FlatToken[] = [];
+  for (const seg of recursed) {
+    if (seg.type === 'text') {
+      for (const ch of seg.value) {
+        tokens.push({ kind: 'char', ch });
+      }
+    } else {
+      tokens.push({ kind: 'node', node: seg });
+    }
+  }
+
+  // Find matching bracket pairs in token array
+  const stack: { index: number; ch: '(' | '[' }[] = [];
+  const pairs: { openIdx: number; closeIdx: number; open: '(' | '['; close: ')' | ']' }[] = [];
+
+  for (let i = 0; i < tokens.length; i++) {
+    const tok = tokens[i];
+    if (tok.kind !== 'char') continue;
+    if (tok.ch === '(' || tok.ch === '[') {
+      stack.push({ index: i, ch: tok.ch });
+    } else if (tok.ch === ')' || tok.ch === ']') {
+      // Find nearest matching opener
+      for (let s = stack.length - 1; s >= 0; s--) {
+        if (isMatchingBracketPair(stack[s].ch, tok.ch)) {
+          pairs.push({
+            openIdx: stack[s].index,
+            closeIdx: i,
+            open: stack[s].ch,
+            close: tok.ch,
+          });
+          stack.splice(s);
+          break;
+        }
+      }
+    }
+  }
+
+  // Keep only pairs whose interior contains at least one tall node (fraction)
+  const tallPairs = pairs.filter((p) => {
+    for (let i = p.openIdx + 1; i < p.closeIdx; i++) {
+      const tok = tokens[i];
+      if (tok.kind === 'node' && containsTallNode([tok.node])) {
+        return true;
+      }
+    }
+    return false;
+  });
+
+  if (tallPairs.length === 0) {
+    return recursed;
+  }
+
+  // Index tall pairs by their openIdx for clean recursive reconstruction
+  const pairByOpen = new Map<number, (typeof tallPairs)[number]>();
+  for (const p of tallPairs) {
+    pairByOpen.set(p.openIdx, p);
+  }
+
+  function buildRange(from: number, to: number): MathSegment[] {
+    const out: MathSegment[] = [];
+    let i = from;
+    while (i < to) {
+      // Check for √ immediately preceding a tall bracket pair (e.g., √(d² / 4r²))
+      const cur = tokens[i];
+      if (cur.kind === 'char' && cur.ch === '√' && i + 1 < to && pairByOpen.has(i + 1)) {
+        const pair = pairByOpen.get(i + 1)!;
+        if (pair.closeIdx < to) {
+          const innerSegs = buildRange(pair.openIdx + 1, pair.closeIdx);
+          out.push({
+            type: 'sqrt',
+            content: innerSegs,
+            isTall: true,
+            rawText: '√(fraction)',
+          });
+          i = pair.closeIdx + 1;
+          continue;
+        }
+      }
+
+      if (pairByOpen.has(i)) {
+        const pair = pairByOpen.get(i)!;
+        if (pair.closeIdx < to) {
+          const innerSegs = buildRange(pair.openIdx + 1, pair.closeIdx);
+          out.push({
+            type: 'delimited',
+            open: pair.open,
+            close: pair.close,
+            content: innerSegs,
+          });
+          i = pair.closeIdx + 1;
+          continue;
+        }
+      }
+
+      if (cur.kind === 'char') {
+        out.push({ type: 'text', value: cur.ch });
+      } else {
+        out.push(cur.node);
+      }
+      i++;
+    }
+    return mergeAdjacentText(out);
+  }
+
+  return buildRange(0, tokens.length);
+}
+
+function applyInlineSqrts(segments: MathSegment[]): MathSegment[] {
+  const out: MathSegment[] = [];
+  for (const seg of segments) {
+    if (seg.type === 'text') {
+      out.push(...parseInlineSqrtsInText(seg.value));
+    } else if (seg.type === 'delimited') {
+      out.push({
+        ...seg,
+        content: applyInlineSqrts(seg.content),
+      });
+    } else if (seg.type === 'sqrt') {
+      out.push({
+        ...seg,
+        content: applyInlineSqrts(seg.content),
+      });
+    } else {
+      // fraction numerator/denominator already decorated
+      out.push(seg);
+    }
+  }
+  return mergeAdjacentText(out);
+}
+
+function decorateMathSegments(segments: MathSegment[]): MathSegment[] {
+  const withDelimiters = upgradeTallDelimiters(segments);
+  return applyInlineSqrts(withDelimiters);
+}
+
 /**
  * Parse arbitrary English/Hindi question, option, or explanation text into
- * plain text and recursive vertical-stacked fraction segments.
+ * plain text, vertical stacked fractions, vertically auto-scaling parentheses/brackets,
+ * and crisp auto-scaling square root radicals.
  */
 export function parseMathText(input: string): MathSegment[] {
   if (!input) return [];
-  if (!input.includes('/')) {
+  if (!input.includes('/') && !input.includes('√')) {
     return [{ type: 'text', value: input }];
   }
 
@@ -859,16 +1071,14 @@ export function parseMathText(input: string): MathSegment[] {
     if (idx > 0) {
       result.push({ type: 'text', value: '\n' });
     }
-    const parsed = parseLine(lines[idx], 0);
-    result.push(...parsed);
+    const rawLineSegs = parseLineFractions(lines[idx], 0);
+    const decorated = decorateMathSegments(rawLineSegs);
+    result.push(...decorated);
   }
 
   return mergeAdjacentText(result);
 }
 
-/**
- * Helper to check whether a parsed segment array contains any stacked fractions.
- */
 export function hasMathFractions(segments: MathSegment[]): boolean {
   return segments.some((seg) => seg.type === 'fraction');
 }

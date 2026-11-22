@@ -2,12 +2,14 @@ import { MockTest } from '../types/exam';
 import { FULL_MOCK_30_SEPT_SHIFT2 } from './mock30SeptShift2';
 import { FULL_MOCK_30_SEPT_SHIFT3 } from './mock30SeptShift3';
 import { FULL_MOCK_01_OCT_SHIFT1 } from './mock01OctShift1';
+import { FULL_MOCK_01_OCT_SHIFT2 } from './mock01OctShift2';
 
 // Keep full mocks in chronological exam order (oldest shift first; append newer shifts below)
 export const DEFAULT_MOCK_TESTS: MockTest[] = [
   FULL_MOCK_30_SEPT_SHIFT2,
   FULL_MOCK_30_SEPT_SHIFT3,
   FULL_MOCK_01_OCT_SHIFT1,
+  FULL_MOCK_01_OCT_SHIFT2,
   {
     id: 'ssc-cgl-30-sept-shift2-math-2026-pyq-1',
     title: '30 Sept Shift 2 Math 2026 PYQ Mock Test 1',

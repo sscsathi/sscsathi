@@ -919,8 +919,8 @@ export function ExamInterface({
                 }}
                 className="mx-auto flex h-full min-h-0 w-full max-w-3xl flex-col overflow-hidden rounded-xl sm:rounded-2xl border border-slate-200 bg-white shadow-xs"
               >
-                {/* Top Panel (~58% height): Full Scrollable Passage without truncation */}
-                <div className="min-h-0 flex-[58] overflow-y-auto touch-pan-y bg-[#F8FAFC] p-3 sm:p-5">
+                {/* Top Panel (flex-1): Full Scrollable Passage expanding cleanly down to the question box */}
+                <div className="flex-1 min-h-0 overflow-y-auto touch-pan-y bg-slate-50/70 px-3.5 pt-3 pb-7 sm:px-5 sm:pt-4 sm:pb-8">
                   <div className="mb-1.5 text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-[#1E3A8A]">
                     Read the passage carefully
                   </div>
@@ -929,14 +929,14 @@ export function ExamInterface({
                   </div>
                 </div>
 
-                {/* Bottom Panel (~42% height): Question Prompt & 4 Compact Option Buttons */}
-                <div className="min-h-0 flex-[42] overflow-y-auto touch-pan-y border-t border-slate-200 bg-white p-2.5 sm:p-4 shadow-[0_-4px_12px_-6px_rgba(15,23,42,0.1)]">
+                {/* Bottom Panel (shrink-0 h-auto): Auto-fits Question Prompt & 4 Tight Option Buttons with Zero Empty Space */}
+                <div className="shrink-0 h-auto max-h-[55%] overflow-y-auto touch-pan-y border-t-2 border-slate-200 bg-white p-2.5 sm:px-4 sm:py-3 shadow-[0_-4px_12px_-6px_rgba(15,23,42,0.1)]">
                   <h2 className="text-[13px] sm:text-sm font-semibold leading-snug text-[#0F172A] whitespace-pre-line">
                     {displayedQuestionText}
                   </h2>
 
                   <div
-                    className="mt-2 sm:mt-2.5 space-y-1.5 sm:space-y-2"
+                    className="mt-2 flex flex-col gap-1.5"
                     role="radiogroup"
                     aria-label="Answer options"
                   >
@@ -952,7 +952,7 @@ export function ExamInterface({
                           role="radio"
                           aria-checked={isSelected}
                           onClick={() => handleSelectOption(optionIdx)}
-                          className={`group flex w-full min-h-[38px] sm:min-h-[44px] items-center justify-between gap-2 rounded-xl border px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-left transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F172A] ${
+                          className={`group flex w-full items-center justify-between gap-2 rounded-xl border px-2.5 py-2 sm:px-3.5 sm:py-2 text-left transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F172A] ${
                             isSelected
                               ? 'border-[#0F172A] bg-amber-50/85 text-[#0F172A] ring-1 ring-[#0F172A] shadow-xs'
                               : 'border-slate-200 bg-white text-slate-800 hover:border-slate-300 hover:bg-slate-50/80'

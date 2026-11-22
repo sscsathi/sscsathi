@@ -42,6 +42,7 @@ interface HomeDashboardProps {
   onStartTest: (test: MockTest) => void;
   onViewResult: (result: ExamResult, initialTab?: 'scorecard' | 'solutions') => void;
   onDeleteCustomTest: (testId: string) => void;
+  homeResetNonce?: number;
 }
 
 interface GroupedTestAttempt {
@@ -69,19 +70,40 @@ export function HomeDashboard({
   onStartTest,
   onViewResult,
   onDeleteCustomTest,
+  homeResetNonce = 0,
 }: HomeDashboardProps) {
   const [selectedCategory, setSelectedCategory] = useState<'All' | TestCategory>('All');
-  const [selectedExam, setSelectedExam] = useState<QuickExamFilter>('ALL');
+  const [selectedExam, setSelectedExam] = useState<QuickExamFilter | null>(null);
   const [pyqSubTab, setPyqSubTab] = useState<'full' | 'sectional'>('full');
   const [isAttemptedModalOpen, setIsAttemptedModalOpen] = useState<boolean>(false);
   const testsSectionRef = useRef<HTMLElement | null>(null);
+  const pendingScrollRef = useRef<boolean>(false);
+
+  const isTestsListVisible = activeSeriesFilter !== 'all' || selectedExam !== null;
+
+  useEffect(() => {
+    if (homeResetNonce > 0) {
+      setSelectedExam(null);
+      setSelectedCategory('All');
+    }
+  }, [homeResetNonce]);
 
   useEffect(() => {
     if (activeSeriesFilter === 'pyq') {
       setPyqSubTab('full');
       setSelectedCategory('All');
+      setSelectedExam(null);
+    } else if (activeSeriesFilter !== 'all') {
+      setSelectedExam(null);
     }
   }, [activeSeriesFilter]);
+
+  useEffect(() => {
+    if (pendingScrollRef.current && isTestsListVisible && testsSectionRef.current) {
+      pendingScrollRef.current = false;
+      testsSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [isTestsListVisible, activeSeriesFilter, selectedExam]);
 
   useEffect(() => {
     if (!isAttemptedModalOpen) return;
@@ -149,7 +171,11 @@ export function HomeDashboard({
         if (pyqSubTab === 'sectional' && t.pyqFormat === 'full') return false;
       }
 
-      if (selectedExam !== 'ALL' && !(t.examTags ?? []).includes(selectedExam)) {
+      if (
+        selectedExam !== null &&
+        selectedExam !== 'ALL' &&
+        !(t.examTags ?? []).includes(selectedExam)
+      ) {
         return false;
       }
 
@@ -212,26 +238,29 @@ export function HomeDashboard({
   }, [groupedAttempts]);
 
   const handlePracticeGridClick = (filter: PracticeSeriesFilter) => {
+    pendingScrollRef.current = true;
     onSeriesFilterChange(filter);
     setSelectedCategory('All');
-    setSelectedExam('ALL');
-    testsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setSelectedExam(filter === 'all' ? 'ALL' : null);
+    if (testsSectionRef.current) {
+      pendingScrollRef.current = false;
+      testsSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
 
   const handleQuickAccessClick = (exam: QuickExamFilter) => {
+    pendingScrollRef.current = true;
     setSelectedExam(exam);
-    if (exam === 'ALL') {
-      onSeriesFilterChange('all');
-      setSelectedCategory('All');
-    } else {
-      onSeriesFilterChange('all');
-      setSelectedCategory('All');
+    onSeriesFilterChange('all');
+    setSelectedCategory('All');
+    if (testsSectionRef.current) {
+      pendingScrollRef.current = false;
+      testsSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-    testsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const sectionHeadingLabel = useMemo(() => {
-    if (selectedExam !== 'ALL') {
+    if (selectedExam !== null && selectedExam !== 'ALL') {
       return selectedExam === 'RRB NTPC'
         ? 'RRB NTPC Mock Tests'
         : `SSC ${selectedExam} Mock Tests`;
@@ -243,7 +272,9 @@ export function HomeDashboard({
   }, [activeSeriesFilter, selectedExam]);
 
   const hasActiveFilter =
-    activeSeriesFilter !== 'all' || selectedExam !== 'ALL' || selectedCategory !== 'All';
+    activeSeriesFilter !== 'all' ||
+    (selectedExam !== null && selectedExam !== 'ALL') ||
+    selectedCategory !== 'All';
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-4 sm:px-6 sm:py-6">
@@ -612,7 +643,8 @@ export function HomeDashboard({
         </div>
       </section>
 
-      {/* Filtered Mock Tests List */}
+      {/* Filtered Mock Tests List — shown only after user selects an exam or series card */}
+      {isTestsListVisible && (
       <section ref={testsSectionRef} className="mt-7 scroll-mt-20">
         {activeSeriesFilter === 'pyq' && (
           <div className="mb-4 flex items-center justify-between gap-3">
@@ -871,6 +903,7 @@ export function HomeDashboard({
           </div>
         )}
       </section>
+      )}
         </>
       )}
 
@@ -933,7 +966,7 @@ export function HomeDashboard({
                     type="button"
                     onClick={() => {
                       setIsAttemptedModalOpen(false);
-                      testsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      handleQuickAccessClick('ALL');
                     }}
                     className="mt-5 inline-flex min-h-[42px] items-center gap-1.5 rounded-xl bg-[#1E3A8A] px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-[#172E6E]"
                   >

@@ -97,6 +97,7 @@ export default function App() {
   const [view, setView] = useState<AppView>('home');
   const [activeHomeTab, setActiveHomeTab] = useState<HomeTopTab>('mocks');
   const [activeSeriesFilter, setActiveSeriesFilter] = useState<PracticeSeriesFilter>('all');
+  const [homeResetNonce, setHomeResetNonce] = useState<number>(0);
   const [activeTestId, setActiveTestId] = useState<string | null>(null);
   const [selectedExamLanguage, setSelectedExamLanguage] = useState<QuestionLanguage>('en');
   const [examSessionKey, setExamSessionKey] = useState<number>(0);
@@ -486,6 +487,7 @@ export default function App() {
           setView('home');
           setActiveHomeTab('mocks');
           setActiveSeriesFilter('all');
+          setHomeResetNonce((n) => n + 1);
         }}
         onQuickFilter={handleQuickFilter}
       />
@@ -502,6 +504,7 @@ export default function App() {
             onStartTest={handleStartTest}
             onViewResult={handleViewResult}
             onDeleteCustomTest={handleDeleteCustomTest}
+            homeResetNonce={homeResetNonce}
           />
         )}
 

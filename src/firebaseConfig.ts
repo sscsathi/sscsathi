@@ -1,6 +1,12 @@
 import { FirebaseApp, getApps, initializeApp } from 'firebase/app';
 import { Auth, GoogleAuthProvider, getAuth } from 'firebase/auth';
-import { Firestore, doc, getDocFromServer, getFirestore } from 'firebase/firestore';
+import {
+  Firestore,
+  doc,
+  getDocFromServer,
+  getFirestore,
+  initializeFirestore,
+} from 'firebase/firestore';
 import appletConfig from '../firebase-applet-config.json';
 
 interface FirebaseRuntimeConfig {
@@ -59,12 +65,30 @@ let auth: Auth | null = null;
 let db: Firestore | null = null;
 let googleProvider: GoogleAuthProvider | null = null;
 
+function createFirestoreInstance(firebaseApp: FirebaseApp, databaseId?: string): Firestore {
+  // Force HTTP long-polling in browsers to avoid 10s WebChannel streaming hangs
+  // behind proxies, mobile CGNAT, antivirus filters, or sandboxed iframes.
+  if (typeof window !== 'undefined') {
+    try {
+      return databaseId
+        ? initializeFirestore(
+            firebaseApp,
+            { experimentalForceLongPolling: true },
+            databaseId
+          )
+        : initializeFirestore(firebaseApp, { experimentalForceLongPolling: true });
+    } catch {
+      // Firestore instance was already initialized; fall back to existing instance.
+    }
+  }
+
+  return databaseId ? getFirestore(firebaseApp, databaseId) : getFirestore(firebaseApp);
+}
+
 if (isFirebaseConfigured) {
   app = getApps().length > 0 ? getApps()[0] : initializeApp(resolvedConfig);
   auth = getAuth(app);
-  db = resolvedConfig.firestoreDatabaseId
-    ? getFirestore(app, resolvedConfig.firestoreDatabaseId)
-    : getFirestore(app);
+  db = createFirestoreInstance(app, resolvedConfig.firestoreDatabaseId);
   googleProvider = new GoogleAuthProvider();
   googleProvider.setCustomParameters({ prompt: 'select_account' });
 }
@@ -125,6 +149,7 @@ export function handleFirestoreError(
 
 export async function testFirestoreConnection(): Promise<void> {
   if (!db) return;
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
   } catch (error) {

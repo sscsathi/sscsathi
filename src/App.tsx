@@ -19,7 +19,9 @@ import {
 } from './firebaseConfig';
 import {
   ensureAndLoadUserProfile,
+  getOrCreateGuestId,
   loadUserAttemptsFromCloud,
+  savePublicTestAttemptToCloud,
   saveUserAttemptToCloud,
   updateUserProfileFields,
 } from './services/userSync';
@@ -78,8 +80,14 @@ export default function App() {
     }
   });
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
+  const [isSavingPublicAttempt, setIsSavingPublicAttempt] = useState<boolean>(false);
+  const [publicAttemptSyncTick, setPublicAttemptSyncTick] = useState<number>(0);
 
   const userScope = user?.uid || 'guest';
+  const effectiveRankUserId = useMemo(
+    () => user?.uid || getOrCreateGuestId(),
+    [user?.uid]
+  );
 
   // User-scoped state
   const [isFollowing, setIsFollowing] = useState<boolean>(() =>
@@ -346,8 +354,16 @@ export default function App() {
       setActiveResult(result);
       setResultInitialTab('scorecard');
       setResultSessionKey((k) => k + 1);
+      setIsSavingPublicAttempt(true);
       setView('result');
       window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      savePublicTestAttemptToCloud(effectiveRankUserId, result)
+        .catch((err) => console.error('Failed to save test attempt for live ranking:', err))
+        .finally(() => {
+          setIsSavingPublicAttempt(false);
+          setPublicAttemptSyncTick((t) => t + 1);
+        });
 
       if (user) {
         saveUserAttemptToCloud(user.uid, result).catch((err) =>
@@ -355,7 +371,7 @@ export default function App() {
         );
       }
     },
-    [user, userScope]
+    [effectiveRankUserId, user, userScope]
   );
 
   const handleViewResult = useCallback(
@@ -515,6 +531,9 @@ export default function App() {
             attemptsForTest={activeTestAttempts}
             test={resultTest}
             initialTab={resultInitialTab}
+            currentUserId={effectiveRankUserId}
+            isSavingAttempt={isSavingPublicAttempt}
+            submissionSyncTick={publicAttemptSyncTick}
             onSelectAttempt={(attempt) => setActiveResult(attempt)}
             onBackHome={() => setView('home')}
             onRetakeTest={handleStartTest}

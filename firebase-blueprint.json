@@ -164,6 +164,68 @@
         "responses",
         "createdAt"
       ]
+    },
+    "TestAttempt": {
+      "title": "TestAttempt",
+      "description": "PII-free mock test attempt record stored in test_attempts for computing 100% real rank, average score, topper score, and percentile using each user's first attempt per test.",
+      "type": "object",
+      "properties": {
+        "testId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Mock test identifier."
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID for signed-in users or persistent guest_<id> for guest sessions."
+        },
+        "score": {
+          "type": "number",
+          "description": "Net score achieved in the attempt."
+        },
+        "accuracy": {
+          "type": "number",
+          "description": "Accuracy percentage (0 to 100)."
+        },
+        "timeTaken": {
+          "type": "number",
+          "description": "Time taken in seconds."
+        },
+        "correct": {
+          "type": "number",
+          "description": "Number of correct answers."
+        },
+        "incorrect": {
+          "type": "number",
+          "description": "Number of wrong answers."
+        },
+        "unattempted": {
+          "type": "number",
+          "description": "Number of skipped/unattempted questions."
+        },
+        "submittedAt": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 64,
+          "description": "ISO-8601 timestamp of test submission."
+        }
+      },
+      "required": [
+        "testId",
+        "userId",
+        "score",
+        "accuracy",
+        "timeTaken",
+        "correct",
+        "incorrect",
+        "unattempted",
+        "submittedAt"
+      ]
     }
   },
   "firestore": {
@@ -178,6 +240,12 @@
         "$ref": "#/entities/ExamAttempt"
       },
       "description": "Per-user completed mock test attempts and analytics."
+    },
+    "/test_attempts/{attemptId}": {
+      "schema": {
+        "$ref": "#/entities/TestAttempt"
+      },
+      "description": "Real test attempt entries per mock test used for fair first-attempt ranking and live score benchmarks."
     }
   }
 }

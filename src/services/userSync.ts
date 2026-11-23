@@ -13,6 +13,7 @@ import {
 } from 'firebase/firestore';
 import { OperationType, db, handleFirestoreError } from '../firebaseConfig';
 import { ExamResult } from '../types/exam';
+import { RealTestAttemptEntry } from '../utils/scoring';
 
 export interface DailyTargetProgress {
   date: string;
@@ -251,3 +252,110 @@ export async function saveUserAttemptToCloud(
     handleFirestoreError(error, OperationType.CREATE, path);
   }
 }
+
+const GUEST_ID_STORAGE_KEY = 'ssc_sathi_guest_id';
+const GUEST_ID_REGEX = /^guest_[a-zA-Z0-9_\-]{8,64}$/;
+let fallbackGuestId: string | null = null;
+
+export function getOrCreateGuestId(): string {
+  try {
+    const existing = localStorage.getItem(GUEST_ID_STORAGE_KEY);
+    if (existing && GUEST_ID_REGEX.test(existing)) {
+      return existing;
+    }
+    const generated = `guest_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+    localStorage.setItem(GUEST_ID_STORAGE_KEY, generated);
+    return generated;
+  } catch {
+    if (!fallbackGuestId) {
+      fallbackGuestId = `guest_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+    }
+    return fallbackGuestId;
+  }
+}
+
+export async function savePublicTestAttemptToCloud(
+  userId: string,
+  result: ExamResult
+): Promise<void> {
+  if (!db) return;
+  const safeAttemptId = sanitizeId(result.attemptId);
+  const safeTestId = sanitizeId(result.testId);
+  const safeUserId = sanitizeId(userId);
+  const rawScore = Number.isFinite(result.score) ? result.score : 0;
+  const clampedScore = Math.max(-400, Math.min(400, rawScore));
+  const clampedAccuracy = Math.max(
+    0,
+    Math.min(100, Number.isFinite(result.accuracyPercent) ? result.accuracyPercent : 0)
+  );
+  const clampedTimeTaken = Math.max(
+    0,
+    Math.min(86400, Math.round(Number.isFinite(result.timeTakenSeconds) ? result.timeTakenSeconds : 0))
+  );
+  const clampedCorrect = Math.max(0, Math.min(200, Math.round(result.correctCount || 0)));
+  const clampedIncorrect = Math.max(0, Math.min(200, Math.round(result.incorrectCount || 0)));
+  const clampedUnattempted = Math.max(0, Math.min(200, Math.round(result.unattemptedCount || 0)));
+  const submittedAt =
+    typeof result.submittedAt === 'string' && result.submittedAt.length >= 10
+      ? result.submittedAt.slice(0, 64)
+      : new Date().toISOString();
+
+  const path = `test_attempts/${safeAttemptId}`;
+  const ref = doc(db, 'test_attempts', safeAttemptId);
+
+  try {
+    await setDoc(ref, {
+      testId: safeTestId,
+      userId: safeUserId,
+      score: clampedScore,
+      accuracy: clampedAccuracy,
+      timeTaken: clampedTimeTaken,
+      correct: clampedCorrect,
+      incorrect: clampedIncorrect,
+      unattempted: clampedUnattempted,
+      submittedAt,
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, path);
+  }
+}
+
+export async function loadPublicTestAttemptsFromCloud(
+  testId: string
+): Promise<RealTestAttemptEntry[]> {
+  if (!db) return [];
+  const safeTestId = sanitizeId(testId);
+  const path = `test_attempts?testId=${safeTestId}`;
+  try {
+    const q = query(
+      collection(db, 'test_attempts'),
+      where('testId', '==', safeTestId),
+      limit(5000)
+    );
+    const snap = await getDocs(q);
+    return snap.docs
+      .map((d) => {
+        const data = d.data();
+        return {
+          testId: String(data.testId || safeTestId),
+          userId: String(data.userId || ''),
+          score: Number(data.score),
+          accuracy: Number(data.accuracy || 0),
+          timeTaken: Number(data.timeTaken || 0),
+          correct: Number(data.correct || 0),
+          incorrect: Number(data.incorrect || 0),
+          unattempted: Number(data.unattempted || 0),
+          submittedAt: String(data.submittedAt || ''),
+        };
+      })
+      .filter(
+        (entry) =>
+          Boolean(entry.userId) &&
+          Number.isFinite(entry.score) &&
+          entry.submittedAt.length >= 10
+      );
+  } catch (error) {
+    handleFirestoreError(error, OperationType.LIST, path);
+  }
+}
+

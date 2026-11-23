@@ -147,6 +147,60 @@ service cloud.firestore {
         && data.createdAt == request.time;
     }
 
+    function isValidPublicTestAttempt(data) {
+      return data.keys().hasAll([
+          'testId',
+          'userId',
+          'score',
+          'accuracy',
+          'timeTaken',
+          'correct',
+          'incorrect',
+          'unattempted',
+          'submittedAt'
+        ])
+        && data.keys().hasOnly([
+          'testId',
+          'userId',
+          'score',
+          'accuracy',
+          'timeTaken',
+          'correct',
+          'incorrect',
+          'unattempted',
+          'submittedAt'
+        ])
+        && data.testId is string
+        && isValidId(data.testId)
+        && data.userId is string
+        && isValidId(data.userId)
+        && (
+          (isSignedIn() && request.auth.token.email_verified == true && data.userId == request.auth.uid)
+          || (!isSignedIn() && data.userId.matches('^guest_[a-zA-Z0-9_\\-]{8,64}$'))
+        )
+        && data.score is number
+        && data.score >= -400
+        && data.score <= 400
+        && data.accuracy is number
+        && data.accuracy >= 0
+        && data.accuracy <= 100
+        && data.timeTaken is number
+        && data.timeTaken >= 0
+        && data.timeTaken <= 86400
+        && data.correct is int
+        && data.correct >= 0
+        && data.correct <= 200
+        && data.incorrect is int
+        && data.incorrect >= 0
+        && data.incorrect <= 200
+        && data.unattempted is int
+        && data.unattempted >= 0
+        && data.unattempted <= 200
+        && data.submittedAt is string
+        && data.submittedAt.size() >= 10
+        && data.submittedAt.size() <= 64;
+    }
+
     match /users/{userId} {
       allow get: if isValidId(userId) && isVerifiedOwner(userId);
       allow list: if false;
@@ -181,6 +235,16 @@ service cloud.firestore {
           && isValidExamAttempt(incoming(), userId, attemptId);
         allow update, delete: if false;
       }
+    }
+
+    match /test_attempts/{attemptId} {
+      allow get: if isValidId(attemptId) && resource.data.testId is string;
+      allow list: if resource.data.testId is string
+        && request.query.limit != null
+        && request.query.limit <= 5000;
+      allow create: if isValidId(attemptId)
+        && isValidPublicTestAttempt(incoming());
+      allow update, delete: if false;
     }
   }
 }

@@ -69,11 +69,112 @@ export function formatDurationVerbose(totalSeconds: number): string {
   return `${mins}m ${secs}s`;
 }
 
-export function estimatePercentile(score: number, maxScore: number): number {
-  if (maxScore <= 0) return 0;
-  const ratio = Math.max(0, Math.min(1, score / maxScore));
-  if (score <= 0) return 5.0;
-  // Smooth monotonic curve mapping normalized SSC mock scores to realistic percentile estimates
-  const curved = Math.pow(ratio, 0.72) * 99.4;
-  return Math.max(5.0, Math.min(99.8, Math.round(curved * 10) / 10));
+export interface RealTestAttemptEntry {
+  testId: string;
+  userId: string;
+  score: number;
+  accuracy: number;
+  timeTaken: number;
+  correct: number;
+  incorrect: number;
+  unattempted: number;
+  submittedAt: string;
 }
+
+export interface LiveTestStats {
+  hasData: boolean;
+  averageScore: number;
+  topperScore: number;
+  rank: number;
+  totalStudents: number;
+  percentile: number;
+  isFirstAttemptView: boolean;
+  userFirstAttemptScore: number;
+}
+
+function getAttemptTimestampMs(submittedAt: string): number {
+  const parsed = Date.parse(submittedAt);
+  return Number.isFinite(parsed) ? parsed : Number.MAX_SAFE_INTEGER;
+}
+
+function isEarlierSubmission(candidate: RealTestAttemptEntry, current: RealTestAttemptEntry): boolean {
+  const candidateMs = getAttemptTimestampMs(candidate.submittedAt);
+  const currentMs = getAttemptTimestampMs(current.submittedAt);
+  if (candidateMs !== currentMs) {
+    return candidateMs < currentMs;
+  }
+  return candidate.submittedAt.localeCompare(current.submittedAt) < 0;
+}
+
+/**
+ * Computes 100% real Average Score, Topper Score, Rank, and Percentile
+ * from real database attempts, deduplicated so only each student's FIRST attempt
+ * per test counts toward the global ranking pool.
+ */
+export function computeLiveTestStats(params: {
+  currentUserId: string;
+  currentAttemptScore: number;
+  currentSubmittedAt: string;
+  attempts: RealTestAttemptEntry[];
+}): LiveTestStats {
+  const { currentUserId, currentAttemptScore, currentSubmittedAt, attempts } = params;
+
+  const firstByUser = new Map<string, RealTestAttemptEntry>();
+  for (const entry of attempts) {
+    if (!entry.userId || !Number.isFinite(entry.score)) continue;
+    const existing = firstByUser.get(entry.userId);
+    if (!existing || isEarlierSubmission(entry, existing)) {
+      firstByUser.set(entry.userId, entry);
+    }
+  }
+
+  const firstAttempts = Array.from(firstByUser.values());
+  const totalStudents = firstAttempts.length;
+
+  if (totalStudents === 0) {
+    return {
+      hasData: false,
+      averageScore: 0,
+      topperScore: 0,
+      rank: 0,
+      totalStudents: 0,
+      percentile: 0,
+      isFirstAttemptView: true,
+      userFirstAttemptScore: currentAttemptScore,
+    };
+  }
+
+  const sum = firstAttempts.reduce((acc, item) => acc + item.score, 0);
+  const averageScore = Math.round((sum / totalStudents) * 100) / 100;
+  const topperScore =
+    Math.round(Math.max(...firstAttempts.map((item) => item.score)) * 100) / 100;
+
+  const userFirstAttempt = currentUserId ? firstByUser.get(currentUserId) : undefined;
+  const userFirstAttemptScore = userFirstAttempt
+    ? userFirstAttempt.score
+    : currentAttemptScore;
+  const isFirstAttemptView =
+    !userFirstAttempt || userFirstAttempt.submittedAt === currentSubmittedAt;
+
+  const strictlyHigherCount = firstAttempts.filter(
+    (item) => item.score > userFirstAttemptScore
+  ).length;
+  const rank = strictlyHigherCount + 1;
+
+  const percentile =
+    totalStudents === 1
+      ? 100
+      : Math.round((((totalStudents - rank) / (totalStudents - 1)) * 100) * 10) / 10;
+
+  return {
+    hasData: true,
+    averageScore,
+    topperScore,
+    rank,
+    totalStudents,
+    percentile,
+    isFirstAttemptView,
+    userFirstAttemptScore,
+  };
+}
+

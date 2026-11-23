@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowLeft,
   Award,
@@ -14,6 +14,10 @@ import {
   Trophy,
   XCircle,
 } from 'lucide-react';
+import {
+  getOrCreateGuestId,
+  loadPublicTestAttemptsFromCloud,
+} from '../services/userSync';
 import { ExamResult, MockTest, OptionIndex, QuestionLanguage } from '../types/exam';
 import {
   EXPLANATION_FONT_CLASS,
@@ -26,7 +30,11 @@ import {
   saveFontZoom,
   stepFontZoom,
 } from '../utils/fontZoom';
-import { estimatePercentile, formatDurationVerbose } from '../utils/scoring';
+import {
+  RealTestAttemptEntry,
+  computeLiveTestStats,
+  formatDurationVerbose,
+} from '../utils/scoring';
 import { MathText } from './MathText';
 import { QuestionVisual } from './QuestionVisual';
 
@@ -35,6 +43,9 @@ interface ResultScreenProps {
   attemptsForTest: ExamResult[];
   test: MockTest | undefined;
   initialTab?: 'scorecard' | 'solutions';
+  currentUserId?: string;
+  isSavingAttempt?: boolean;
+  submissionSyncTick?: number;
   onSelectAttempt: (attempt: ExamResult) => void;
   onBackHome: () => void;
   onRetakeTest: (test: MockTest) => void;
@@ -49,6 +60,9 @@ export function ResultScreen({
   attemptsForTest,
   test,
   initialTab = 'scorecard',
+  currentUserId,
+  isSavingAttempt = false,
+  submissionSyncTick = 0,
   onSelectAttempt,
   onBackHome,
   onRetakeTest,
@@ -58,6 +72,46 @@ export function ResultScreen({
   const [selectedSectionId, setSelectedSectionId] = useState<string>('all');
   const [solutionLang, setSolutionLang] = useState<QuestionLanguage>('en');
   const [fontZoom, setFontZoom] = useState<FontZoomLevel>(() => loadSavedFontZoom());
+  const [liveAttempts, setLiveAttempts] = useState<RealTestAttemptEntry[]>([]);
+  const [isFetchingStats, setIsFetchingStats] = useState<boolean>(true);
+
+  const effectiveUserId = useMemo(
+    () => currentUserId || getOrCreateGuestId(),
+    [currentUserId]
+  );
+
+  useEffect(() => {
+    if (isSavingAttempt) {
+      setIsFetchingStats(true);
+      return;
+    }
+
+    let isCancelled = false;
+    setIsFetchingStats(true);
+
+    loadPublicTestAttemptsFromCloud(result.testId)
+      .then((records) => {
+        if (!isCancelled) {
+          setLiveAttempts(records);
+        }
+      })
+      .catch(() => {
+        if (!isCancelled) {
+          setLiveAttempts([]);
+        }
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setIsFetchingStats(false);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [isSavingAttempt, result.attemptId, result.testId, submissionSyncTick]);
+
+  const isLoadingLiveStats = isSavingAttempt || isFetchingStats;
 
   const minFontZoom = FONT_ZOOM_STEPS[0];
   const maxFontZoom = FONT_ZOOM_STEPS[FONT_ZOOM_STEPS.length - 1];
@@ -169,7 +223,16 @@ export function ResultScreen({
     result.maxScore > 0
       ? Math.max(0, Math.round((result.score / result.maxScore) * 100))
       : 0;
-  const percentileEstimate = estimatePercentile(result.score, result.maxScore);
+  const liveStats = useMemo(
+    () =>
+      computeLiveTestStats({
+        currentUserId: effectiveUserId,
+        currentAttemptScore: result.score,
+        currentSubmittedAt: result.submittedAt,
+        attempts: liveAttempts,
+      }),
+    [effectiveUserId, liveAttempts, result.score, result.submittedAt]
+  );
   const attemptedCount = result.correctCount + result.incorrectCount;
   const avgSecPerAttempt =
     attemptedCount > 0 ? Math.round(result.timeTakenSeconds / attemptedCount) : 0;
@@ -359,87 +422,216 @@ export function ResultScreen({
 
       {/* TAB 1: PERFORMANCE DASHBOARD */}
       {activeTab === 'scorecard' && (
-        <div className="mt-6 space-y-6">
-          {/* 4-Column KPI Strip */}
-          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-2xl bg-[#0F172A] p-5 text-white shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wide text-[#F59E0B]">
-                  Score (+2 / -0.50)
+        <div className="mt-5 space-y-4">
+          {/* 1. Hero Score Card (Dark Navy) */}
+          <section className="rounded-2xl bg-[#0F172A] p-4 sm:p-5 text-white shadow-sm">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wide text-[#F59E0B]">
+                Score (+{positiveMarks} / -{negativeMarks.toFixed(2)})
+              </span>
+              <Trophy className="h-5 w-5 text-[#F59E0B] shrink-0" aria-hidden="true" />
+            </div>
+
+            <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+              <div className="flex items-baseline gap-1.5 tabular-nums">
+                <span className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                  {result.score}
                 </span>
-                <Trophy className="h-5 w-5 text-[#F59E0B]" aria-hidden="true" />
-              </div>
-              <div className="mt-2.5 flex items-baseline gap-1.5 tabular-nums">
-                <span className="text-3xl font-extrabold text-white">{result.score}</span>
-                <span className="text-base font-medium text-slate-300">
+                <span className="text-base sm:text-lg font-medium text-slate-300">
                   / {result.maxScore}
                 </span>
               </div>
-              <p className="mt-2 text-xs text-slate-300 tabular-nums">
+              <p className="text-xs text-slate-300 tabular-nums">
                 +{positiveEarned} earned · -{negativeDeducted.toFixed(2)} negative ({scorePercent}%)
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+            {/* Bottom 2-column Benchmark Strip */}
+            <div className="mt-3.5 pt-3 border-t border-slate-700/70 grid grid-cols-2 divide-x divide-slate-700/70">
+              <div className="pr-3">
+                <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+                  Average Score
+                </span>
+                {isLoadingLiveStats ? (
+                  <div
+                    aria-label="Loading average score"
+                    className="mt-1.5 h-5 w-24 animate-pulse rounded bg-slate-700/80"
+                  />
+                ) : liveStats.hasData ? (
+                  <div className="mt-0.5 text-base sm:text-lg font-bold text-white tabular-nums">
+                    {liveStats.averageScore}{' '}
+                    <span className="text-xs font-normal text-slate-400">/ {result.maxScore}</span>
+                  </div>
+                ) : (
+                  <div className="mt-0.5 text-base sm:text-lg font-bold text-slate-400 tabular-nums">
+                    —
+                  </div>
+                )}
+              </div>
+
+              <div className="pl-3 sm:pl-4">
+                <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+                  Topper Score
+                </span>
+                {isLoadingLiveStats ? (
+                  <div
+                    aria-label="Loading topper score"
+                    className="mt-1.5 h-5 w-24 animate-pulse rounded bg-slate-700/80"
+                  />
+                ) : liveStats.hasData ? (
+                  <div className="mt-0.5 text-base sm:text-lg font-bold text-[#F59E0B] tabular-nums">
+                    {liveStats.topperScore}{' '}
+                    <span className="text-xs font-normal text-slate-400">/ {result.maxScore}</span>
+                  </div>
+                ) : (
+                  <div className="mt-0.5 text-base sm:text-lg font-bold text-slate-400 tabular-nums">
+                    —
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* 2. Compact 2x2 Metrics Grid */}
+          <section
+            aria-label="Key performance metrics"
+            className="grid grid-cols-2 gap-2.5 sm:gap-3.5"
+          >
+            {/* Card 1: Rank */}
+            <div className="rounded-xl border border-slate-200 bg-white p-3.5 sm:p-4 shadow-xs">
+              <div className="flex items-center justify-between gap-1.5">
+                <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wide text-slate-600 truncate">
+                  Rank
+                </span>
+                <Award className="h-4 w-4 text-[#F59E0B] shrink-0" aria-hidden="true" />
+              </div>
+              {isLoadingLiveStats ? (
+                <>
+                  <div
+                    aria-label="Loading rank"
+                    className="mt-2 h-6 w-20 animate-pulse rounded bg-slate-200"
+                  />
+                  <div className="mt-2 h-3 w-24 animate-pulse rounded bg-slate-100" />
+                </>
+              ) : liveStats.hasData ? (
+                <>
+                  <div className="mt-1.5 flex items-baseline gap-1 tabular-nums">
+                    <span className="text-xl sm:text-2xl font-extrabold text-[#0F172A]">
+                      {liveStats.rank.toLocaleString()}
+                    </span>
+                    <span className="text-xs font-medium text-slate-400">
+                      / {liveStats.totalStudents.toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[11px] text-slate-500 truncate">
+                    {liveStats.totalStudents === 1
+                      ? 'First to attempt!'
+                      : !liveStats.isFirstAttemptView
+                        ? `1st attempt rank (${liveStats.userFirstAttemptScore} pts)`
+                        : `Among ${liveStats.totalStudents.toLocaleString()} students`}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="mt-1.5 text-xl sm:text-2xl font-extrabold text-slate-400 tabular-nums">
+                    —
+                  </div>
+                  <p className="mt-1 text-[11px] text-slate-500 truncate">
+                    No database records yet
+                  </p>
+                </>
+              )}
+            </div>
+
+            {/* Card 2: Percentile */}
+            <div className="rounded-xl border border-slate-200 bg-white p-3.5 sm:p-4 shadow-xs">
+              <div className="flex items-center justify-between gap-1.5">
+                <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wide text-slate-600 truncate">
+                  Percentile
+                </span>
+                <TrendingUp className="h-4 w-4 text-[#F59E0B] shrink-0" aria-hidden="true" />
+              </div>
+              {isLoadingLiveStats ? (
+                <>
+                  <div
+                    aria-label="Loading percentile"
+                    className="mt-2 h-6 w-16 animate-pulse rounded bg-slate-200"
+                  />
+                  <div className="mt-2 h-3 w-24 animate-pulse rounded bg-slate-100" />
+                </>
+              ) : liveStats.hasData ? (
+                <>
+                  <div className="mt-1.5 text-xl sm:text-2xl font-extrabold text-[#0F172A] tabular-nums">
+                    {liveStats.percentile}%
+                  </div>
+                  <p className="mt-1 text-[11px] text-slate-500 truncate">
+                    {liveStats.totalStudents === 1
+                      ? 'First to attempt!'
+                      : !liveStats.isFirstAttemptView
+                        ? 'Based on 1st attempt'
+                        : 'Live student percentile'}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="mt-1.5 text-xl sm:text-2xl font-extrabold text-slate-400 tabular-nums">
+                    —
+                  </div>
+                  <p className="mt-1 text-[11px] text-slate-500 truncate">
+                    No database records yet
+                  </p>
+                </>
+              )}
+            </div>
+
+            {/* Card 3: Accuracy */}
+            <div className="rounded-xl border border-slate-200 bg-white p-3.5 sm:p-4 shadow-xs">
+              <div className="flex items-center justify-between gap-1.5">
+                <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wide text-slate-600 truncate">
                   Accuracy
                 </span>
-                <Target className="h-5 w-5 text-emerald-600" aria-hidden="true" />
+                <Target className="h-4 w-4 text-emerald-600 shrink-0" aria-hidden="true" />
               </div>
-              <div className="mt-2.5 text-3xl font-extrabold text-[#0F172A] tabular-nums">
+              <div className="mt-1.5 text-xl sm:text-2xl font-extrabold text-[#0F172A] tabular-nums">
                 {result.accuracyPercent}%
               </div>
-              <p className="mt-2 text-xs text-slate-500 tabular-nums">
-                {result.correctCount} correct of {attemptedCount} attempted
+              <p className="mt-1 text-[11px] text-slate-500 tabular-nums truncate">
+                {result.correctCount}/{attemptedCount} correct
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-                  Est. Percentile
-                </span>
-                <TrendingUp className="h-5 w-5 text-[#F59E0B]" aria-hidden="true" />
-              </div>
-              <div className="mt-2.5 text-3xl font-extrabold text-[#0F172A] tabular-nums">
-                {percentileEstimate}%ile
-              </div>
-              <p className="mt-2 text-xs text-slate-500 flex items-center gap-1">
-                <Award className="h-3.5 w-3.5 text-[#F59E0B]" aria-hidden="true" />
-                <span>Projected SSC rank curve</span>
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+            {/* Card 4: Time Taken */}
+            <div className="rounded-xl border border-slate-200 bg-white p-3.5 sm:p-4 shadow-xs">
+              <div className="flex items-center justify-between gap-1.5">
+                <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wide text-slate-600 truncate">
                   Time Taken
                 </span>
-                <Clock className="h-5 w-5 text-[#0F172A]" aria-hidden="true" />
+                <Clock className="h-4 w-4 text-[#0F172A] shrink-0" aria-hidden="true" />
               </div>
-              <div className="mt-2.5 text-3xl font-extrabold text-[#0F172A] tabular-nums">
+              <div className="mt-1.5 text-xl sm:text-2xl font-extrabold text-[#0F172A] tabular-nums">
                 {formatDurationVerbose(result.timeTakenSeconds)}
               </div>
-              <p className="mt-2 text-xs text-slate-500 tabular-nums">
+              <p className="mt-1 text-[11px] text-slate-500 tabular-nums truncate">
                 {avgSecPerAttempt > 0
-                  ? `${avgSecPerAttempt}s/Q avg · ${formatDurationVerbose(result.totalDurationSeconds)} total`
-                  : `Out of ${formatDurationVerbose(result.totalDurationSeconds)} allotted`}
+                  ? `${avgSecPerAttempt}s/Q avg · ${formatDurationVerbose(result.totalDurationSeconds)}`
+                  : `of ${formatDurationVerbose(result.totalDurationSeconds)} total`}
               </p>
             </div>
           </section>
 
-          {/* Attempt Distribution & Interactive Filter Shortcut Cards */}
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-xs">
+          {/* 3. Compact Question Breakdown + Tables */}
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-xs">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-base font-bold text-[#0F172A]">Question Breakdown</h2>
-              <span className="text-xs text-slate-500">
-                Click any category card to inspect those questions
+              <h2 className="text-sm sm:text-base font-bold text-[#0F172A]">
+                Question Breakdown
+              </h2>
+              <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-[#0F172A] tabular-nums">
+                Questions Attempted ({attemptedCount}/{result.totalQuestions})
               </span>
             </div>
 
             {/* Proportional Visual Bar */}
-            <div className="mt-4 flex h-3 w-full overflow-hidden rounded-full bg-slate-100">
+            <div className="mt-3 flex h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
               {correctPctBar > 0 && (
                 <div
                   style={{ width: `${correctPctBar}%` }}
@@ -451,32 +643,37 @@ export function ResultScreen({
                 <div
                   style={{ width: `${incorrectPctBar}%` }}
                   className="bg-rose-500 transition-all"
-                  title={`Incorrect: ${result.incorrectCount}`}
+                  title={`Wrong: ${result.incorrectCount}`}
                 />
               )}
               {unattemptedPctBar > 0 && (
                 <div
                   style={{ width: `${unattemptedPctBar}%` }}
                   className="bg-slate-300 transition-all"
-                  title={`Unattempted: ${result.unattemptedCount}`}
+                  title={`Skipped: ${result.unattemptedCount}`}
                 />
               )}
             </div>
 
-            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3 tabular-nums">
+            {/* 3-Column Horizontal Pill/Box Layout */}
+            <div className="mt-3 grid grid-cols-3 gap-2 sm:gap-3 tabular-nums">
               <button
                 type="button"
                 onClick={() => jumpToSolutions('correct')}
-                className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50/70 p-4 text-left transition-colors hover:bg-emerald-100/70"
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 rounded-xl border border-emerald-200 bg-emerald-50/80 px-2.5 py-2.5 sm:px-3.5 sm:py-3 text-left transition-colors hover:bg-emerald-100/80"
               >
-                <div className="flex items-center gap-2.5">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" aria-hidden="true" />
-                  <div>
-                    <div className="text-xs font-semibold text-emerald-900">Correct</div>
-                    <div className="text-xs text-emerald-700">+{positiveMarks} each</div>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" aria-hidden="true" />
+                  <div className="min-w-0">
+                    <div className="text-[11px] sm:text-xs font-bold text-emerald-900 truncate">
+                      Correct
+                    </div>
+                    <div className="text-[10px] sm:text-[11px] text-emerald-700 truncate">
+                      +{positiveEarned} marks
+                    </div>
                   </div>
                 </div>
-                <span className="text-2xl font-extrabold text-emerald-900">
+                <span className="text-lg sm:text-2xl font-extrabold text-emerald-900 self-end sm:self-center">
                   {result.correctCount}
                 </span>
               </button>
@@ -484,16 +681,20 @@ export function ResultScreen({
               <button
                 type="button"
                 onClick={() => jumpToSolutions('incorrect')}
-                className="flex items-center justify-between rounded-xl border border-rose-200 bg-rose-50/70 p-4 text-left transition-colors hover:bg-rose-100/70"
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 rounded-xl border border-rose-200 bg-rose-50/80 px-2.5 py-2.5 sm:px-3.5 sm:py-3 text-left transition-colors hover:bg-rose-100/80"
               >
-                <div className="flex items-center gap-2.5">
-                  <XCircle className="h-5 w-5 text-rose-600 shrink-0" aria-hidden="true" />
-                  <div>
-                    <div className="text-xs font-semibold text-rose-900">Incorrect</div>
-                    <div className="text-xs text-rose-700">-{negativeMarks.toFixed(2)} each</div>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <XCircle className="h-4 w-4 text-rose-600 shrink-0" aria-hidden="true" />
+                  <div className="min-w-0">
+                    <div className="text-[11px] sm:text-xs font-bold text-rose-900 truncate">
+                      Wrong
+                    </div>
+                    <div className="text-[10px] sm:text-[11px] text-rose-700 truncate">
+                      -{negativeDeducted.toFixed(2)} marks
+                    </div>
                   </div>
                 </div>
-                <span className="text-2xl font-extrabold text-rose-900">
+                <span className="text-lg sm:text-2xl font-extrabold text-rose-900 self-end sm:self-center">
                   {result.incorrectCount}
                 </span>
               </button>
@@ -501,16 +702,20 @@ export function ResultScreen({
               <button
                 type="button"
                 onClick={() => jumpToSolutions('unattempted')}
-                className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-4 text-left transition-colors hover:bg-slate-100"
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2.5 sm:px-3.5 sm:py-3 text-left transition-colors hover:bg-slate-100"
               >
-                <div className="flex items-center gap-2.5">
-                  <MinusCircle className="h-5 w-5 text-slate-500 shrink-0" aria-hidden="true" />
-                  <div>
-                    <div className="text-xs font-semibold text-slate-800">Unattempted</div>
-                    <div className="text-xs text-slate-500">0 marks</div>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <MinusCircle className="h-4 w-4 text-slate-500 shrink-0" aria-hidden="true" />
+                  <div className="min-w-0">
+                    <div className="text-[11px] sm:text-xs font-bold text-slate-800 truncate">
+                      Skipped
+                    </div>
+                    <div className="text-[10px] sm:text-[11px] text-slate-500 truncate">
+                      0 marks
+                    </div>
                   </div>
                 </div>
-                <span className="text-2xl font-extrabold text-[#0F172A]">
+                <span className="text-lg sm:text-2xl font-extrabold text-[#0F172A] self-end sm:self-center">
                   {result.unattemptedCount}
                 </span>
               </button>

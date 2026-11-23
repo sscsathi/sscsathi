@@ -526,9 +526,7 @@ export function ResultScreen({
                   <p className="mt-1 text-[11px] text-slate-500 truncate">
                     {liveStats.totalStudents === 1
                       ? 'First to attempt!'
-                      : !liveStats.isFirstAttemptView
-                        ? `1st attempt rank (${liveStats.userFirstAttemptScore} pts)`
-                        : `Among ${liveStats.totalStudents.toLocaleString()} students`}
+                      : `Among ${liveStats.totalStudents.toLocaleString()} students`}
                   </p>
                 </>
               ) : (
@@ -567,9 +565,7 @@ export function ResultScreen({
                   <p className="mt-1 text-[11px] text-slate-500 truncate">
                     {liveStats.totalStudents === 1
                       ? 'First to attempt!'
-                      : !liveStats.isFirstAttemptView
-                        ? 'Based on 1st attempt'
-                        : 'Live student percentile'}
+                      : 'Live student percentile'}
                   </p>
                 </>
               ) : (

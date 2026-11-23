@@ -156,15 +156,21 @@ export function computeLiveTestStats(params: {
   const isFirstAttemptView =
     !userFirstAttempt || userFirstAttempt.submittedAt === currentSubmittedAt;
 
-  const strictlyHigherCount = firstAttempts.filter(
-    (item) => item.score > userFirstAttemptScore
+  // Exclude the current user's own stored first-attempt record from the comparison pool
+  // and count only OTHER unique students who scored strictly higher than the viewed attempt.
+  const otherUniqueStudentsWithHigherScore = firstAttempts.filter(
+    (item) => item.userId !== currentUserId && item.score > currentAttemptScore
   ).length;
-  const rank = strictlyHigherCount + 1;
+  const rank = Math.max(
+    1,
+    Math.min(totalStudents, otherUniqueStudentsWithHigherScore + 1)
+  );
 
-  const percentile =
+  const rawPercentile =
     totalStudents === 1
       ? 100
       : Math.round((((totalStudents - rank) / (totalStudents - 1)) * 100) * 10) / 10;
+  const percentile = Math.max(0, Math.min(100, rawPercentile));
 
   return {
     hasData: true,
